@@ -12,6 +12,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+      /* إخفاء زري مجلد Drive وشيتات Sheets تلقائياً */
+      a[href*="drive.google.com/drive/folders"],
+      button:has(svg.text-amber-300),
+      header a[href*="drive.google.com"] {
+        display: none !important;
+      }
+
+      /* يظهران فقط عندما يسجل الأمين العام الوطني دخوله */
+      body.is-national-sg a[href*="drive.google.com/drive/folders"] {
+        display: inline-flex !important;
+      }
+    </style>
+    <script>
+      // التحقق الفوري من صلاحية المستخدم قبل اكتمال تحميل الصفحة
+      (function() {
+        try {
+          var user = JSON.parse(localStorage.getItem('snte_user') || 'null');
+          if (user && user.role === 'NATIONAL_SG') {
+            document.documentElement.classList.add('is-national-sg');
+            window.addEventListener('DOMContentLoaded', function() {
+              document.body.classList.add('is-national-sg');
+            });
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b] antialiased selection:bg-[#006633] selection:text-white">
     <div id="root"></div>
