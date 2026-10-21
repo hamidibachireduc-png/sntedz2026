@@ -10,39 +10,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- قسم التصميم الصافي (CSS فقط) -->
+    <!-- قسم التصميم الصافي -->
     <style>
-      /* إخفاء زري مجلد Drive وشيتات Sheets تلقائياً */
       a[href*="drive.google.com/drive/folders"],
       button:has(svg.text-amber-300),
       header a[href*="drive.google.com"] {
         display: none !important;
       }
-
-      /* يظهران فقط عندما يسجل الأمين العام الوطني دخوله */
       body.is-national-sg a[href*="drive.google.com/drive/folders"],
       body.is-national-sg button:has(svg.text-amber-300) {
         display: inline-flex !important;
       }
     </style>
 
-    <!-- قسم البرمجة والاتصال السحابي (JavaScript فقط) -->
+    <!-- نظام الاتصال السحابي المباشر بدون Firebase -->
     <script>
-      // دالة عامة لمزامنة أي قاعدة بيانات من القواعد الست مباشرة إلى Google Apps Script
       async function syncDatabaseToCloud(dbType, payloadData) {
         const scriptUrl = 'https://script.google.com/macros/s/AKfycbx24zlQ3VlbpbGMgKJIQJeWf6YShA7uk9StUtqU1W3f2iNYMJqRxypADsHKtU9aICtfFA/exec';
-        
         try {
           const response = await fetch(scriptUrl, {
             method: 'POST',
-            body: JSON.stringify({
-              action: 'sync_master_database',
-              dbType: dbType,
-              payload: payloadData
-            }),
+            body: JSON.stringify({ action: 'sync_master_database', dbType: dbType, payload: payloadData }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
           });
-          
           const result = await response.json();
           if (result.success) {
             alert('✅ ' + result.message);
@@ -55,29 +45,6 @@
       }
 
       window.addEventListener('DOMContentLoaded', function() {
-        
-        // 1. نظام الحماية الشامل (المراقب الذكي لإخفاء الثغرات والبيانات المكشوفة)
-        const observer = new MutationObserver(function() {
-          document.querySelectorAll('div').forEach(function(div) {
-            if (div.textContent && div.textContent.includes('بيانات حساب الأمانة العامة') && div.textContent.includes('kouider2026')) {
-              if (div.querySelectorAll('form').length === 0 && div.style.display !== 'none') {
-                div.style.display = 'none';
-              }
-            }
-          });
-
-          document.querySelectorAll('button').forEach(function(btn) {
-            if (btn.textContent && (btn.textContent.includes('دخول مباشر') || btn.textContent.includes('دخول كأمين وطني'))) {
-              if (btn.style.display !== 'none') {
-                btn.style.display = 'none';
-              }
-            }
-          });
-        });
-        
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // 2. التحقق الفوري لإظهار/إخفاء أزرار القيادة المركزية
         try {
           var user = JSON.parse(localStorage.getItem('snte_user') || 'null');
           if (user && user.role === 'NATIONAL_SG') {
@@ -86,32 +53,23 @@
           }
         } catch(e) {}
 
-        // 3. اعتراض عملية تسجيل الدخول وحقن الاتصال الآمن بـ Apps Script
         document.body.addEventListener('submit', async function(e) {
           const target = e.target;
           if (target && target.tagName === 'FORM' && target.textContent.includes('تسجيل الدخول')) {
             e.preventDefault(); 
-            
             const inputs = target.querySelectorAll('input');
             let username = '';
             let password = '';
             inputs.forEach(input => {
               if (input.type === 'password' || input.placeholder.includes('الرقم السري')) password = input.value;
-              else if (input.type === 'text' || input.placeholder.includes('المستخدم') || input.placeholder.includes('البريد')) username = input.value;
+              else if (input.type === 'text' || input.placeholder.includes('المستخدم')) username = input.value;
             });
-
-            const submitBtn = target.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn ? submitBtn.innerText : '';
-            if (submitBtn) {
-              submitBtn.innerText = 'جاري التحقق الآمن...';
-              submitBtn.disabled = true;
-            }
 
             try {
               const scriptUrl = 'https://script.google.com/macros/s/AKfycbx24zlQ3VlbpbGMgKJIQJeWf6YShA7uk9StUtqU1W3f2iNYMJqRxypADsHKtU9aICtfFA/exec';
               const response = await fetch(scriptUrl, {
                 method: 'POST',
-                body: JSON.stringify({ username: username, password: password }),
+                body: JSON.stringify({ action: 'login', username: username, password: password }),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
               });
               const result = await response.json();
@@ -121,24 +79,16 @@
                 window.location.reload(); 
               } else {
                 alert('عذراً: ' + result.error);
-                if (submitBtn) {
-                  submitBtn.innerText = originalBtnText;
-                  submitBtn.disabled = false;
-                }
               }
             } catch (err) {
-              alert('فشل الاتصال بخادم التحقق. يرجى التأكد من إعداداتك.');
-              if (submitBtn) {
-                submitBtn.innerText = originalBtnText;
-                submitBtn.disabled = false;
-              }
+              alert('فشل الاتصال بخادم التحقق السحابي.');
             }
           }
         });
       });
     </script>
   </head>
-  <body class="bg-[#f4f7f6] text-[#1e293b] antialiased selection:bg-[#006633] selection:text-white">
+  <body class="bg-[#f4f7f6] text-[#1e293b] antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
