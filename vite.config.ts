@@ -11,6 +11,10 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    base: '/bawaba2026/', // <-- أضفنا هذا للإعداد الناجح على GitHub Pages
+    // للمشروع الجذر (username.github.io) بدون مجلد فرعي، اكتب: base: '/'
+    // للمجلد الفرعي (username.github.io/bawaba2026)، اكتب: base: '/bawaba2026/'
+    
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
