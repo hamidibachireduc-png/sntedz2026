@@ -28,19 +28,30 @@
     <script>
       window.addEventListener('DOMContentLoaded', function() {
         
-        // 1. نظام إخفاء البيانات المكشوفة (المربع الأصفر)
+        // 1. نظام الحماية الشامل (المراقب الذكي لإخفاء الثغرات والبيانات المكشوفة)
         const observer = new MutationObserver(function() {
+          
+          // أ- إخفاء المربع الأصفر (بيانات الأمانة العامة)
           document.querySelectorAll('div').forEach(function(div) {
-            // نبحث عن المربع الذي يحتوي على كلمة المرور المكشوفة وزر التعبئة
             if (div.textContent && div.textContent.includes('بيانات حساب الأمانة العامة') && div.textContent.includes('kouider2026')) {
-              // نتأكد أننا نخفي المربع الأصفر فقط (الذي لا يحتوي على الفورم الأساسي)
               if (div.querySelectorAll('form').length === 0 && div.style.display !== 'none') {
                 div.style.display = 'none';
               }
             }
           });
+
+          // ب- إخفاء أزرار الدخول المباشر (غلق الأبواب الخلفية)
+          document.querySelectorAll('button').forEach(function(btn) {
+            if (btn.textContent && (btn.textContent.includes('دخول مباشر') || btn.textContent.includes('دخول كأمين وطني'))) {
+              if (btn.style.display !== 'none') {
+                btn.style.display = 'none';
+              }
+            }
+          });
+
         });
-        // تفعيل المراقب ليعمل باستمرار عند فتح النوافذ
+        
+        // تفعيل المراقب ليعمل باستمرار
         observer.observe(document.body, { childList: true, subtree: true });
 
         // 2. التحقق الفوري لإظهار/إخفاء أزرار القيادة المركزية
@@ -74,7 +85,6 @@
             }
 
             try {
-              // رابط التحقق المشفر الخاص بك
               const scriptUrl = 'https://script.google.com/macros/s/AKfycbx24zlQ3VlbpbGMgKJIQJeWf6YShA7uk9StUtqU1W3f2iNYMJqRxypADsHKtU9aICtfFA/exec';
               const response = await fetch(scriptUrl, {
                 method: 'POST',
