@@ -11,7 +11,7 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
-    base: '/bawaba2026/', // <-- أضفنا هذا للإعداد الناجح على GitHub Pages
+    base: './',
     // للمشروع الجذر (username.github.io) بدون مجلد فرعي، اكتب: base: '/'
     // للمجلد الفرعي (username.github.io/bawaba2026)، اكتب: base: '/bawaba2026/'
     
