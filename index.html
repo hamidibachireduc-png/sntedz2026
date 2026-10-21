@@ -3,29 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E</title>
-    <meta name="description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية بنظام التدرج الهيكلي والصلاحيات (وطني، ولائي، بلدي، فرع مؤسسة) وإدارة الانخراطات والمحاضر والإحصائيات." />
-    <meta property="og:title" content="البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E" />
-    <meta property="og:description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية بنظام التدرج الهيكلي والصلاحيات (وطني، ولائي، بلدي، فرع مؤسسة) وإدارة الانخراطات والمحاضر والإحصائيات." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <title>البوابة الرقمية الرسمية - S.N.T.E</title>
+    <meta name="description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية" />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  <style>
-      /* إخفاء زري مجلد Drive وشيتات Sheets تلقائياً */
-      a[href*="drive.google.com/drive/folders"],
-      button:has(svg.text-amber-300),
-      header a[href*="drive.google.com"] {
-        display: none !important;
-      }
+    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;700&display=swap" rel="stylesheet">
 
-      /* يظهران فقط عندما يسجل الأمين العام الوطني دخوله */
-      body.is-national-sg a[href*="drive.google.com/drive/folders"] {
-        display: inline-flex !important;
-      }
-    <script>
-     <style>
+    <style>
       /* إخفاء زري مجلد Drive وشيتات Sheets تلقائياً */
       a[href*="drive.google.com/drive/folders"],
       button:has(svg.text-amber-300),
@@ -56,11 +41,9 @@
         // 2. اعتراض عملية تسجيل الدخول وحقن الاتصال الآمن بـ Apps Script
         document.body.addEventListener('submit', async function(e) {
           const target = e.target;
-          // التأكد من أن النموذج المرسل هو نموذج الدخول
           if (target && target.tagName === 'FORM' && target.textContent.includes('تسجيل الدخول')) {
-            e.preventDefault(); // إيقاف العملية الافتراضية
+            e.preventDefault(); 
             
-            // استخراج البيانات من الحقول
             const inputs = target.querySelectorAll('input');
             let username = '';
             let password = '';
@@ -86,7 +69,6 @@
               const result = await response.json();
 
               if (result.success) {
-                // حفظ الجلسة وتحديث الصفحة للدخول للوحة التحكم
                 localStorage.setItem('snte_user', JSON.stringify(result.user));
                 window.location.reload(); 
               } else {
@@ -113,4 +95,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
