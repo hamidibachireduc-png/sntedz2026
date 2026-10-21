@@ -26,10 +26,24 @@
     </style>
 
     <script>
-      // نظام الأمان والحماية المركزية (تخطي التحقق المكشوف)
       window.addEventListener('DOMContentLoaded', function() {
         
-        // 1. التحقق الفوري لإظهار/إخفاء أزرار القيادة
+        // 1. نظام إخفاء البيانات المكشوفة (المربع الأصفر)
+        const observer = new MutationObserver(function() {
+          document.querySelectorAll('div').forEach(function(div) {
+            // نبحث عن المربع الذي يحتوي على كلمة المرور المكشوفة وزر التعبئة
+            if (div.textContent && div.textContent.includes('بيانات حساب الأمانة العامة') && div.textContent.includes('kouider2026')) {
+              // نتأكد أننا نخفي المربع الأصفر فقط (الذي لا يحتوي على الفورم الأساسي)
+              if (div.querySelectorAll('form').length === 0 && div.style.display !== 'none') {
+                div.style.display = 'none';
+              }
+            }
+          });
+        });
+        // تفعيل المراقب ليعمل باستمرار عند فتح النوافذ
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // 2. التحقق الفوري لإظهار/إخفاء أزرار القيادة المركزية
         try {
           var user = JSON.parse(localStorage.getItem('snte_user') || 'null');
           if (user && user.role === 'NATIONAL_SG') {
@@ -38,7 +52,7 @@
           }
         } catch(e) {}
 
-        // 2. اعتراض عملية تسجيل الدخول وحقن الاتصال الآمن بـ Apps Script
+        // 3. اعتراض عملية تسجيل الدخول وحقن الاتصال الآمن بـ Apps Script
         document.body.addEventListener('submit', async function(e) {
           const target = e.target;
           if (target && target.tagName === 'FORM' && target.textContent.includes('تسجيل الدخول')) {
@@ -49,7 +63,7 @@
             let password = '';
             inputs.forEach(input => {
               if (input.type === 'password' || input.placeholder.includes('الرقم السري')) password = input.value;
-              else if (input.type === 'text' || input.placeholder.includes('المستخدم')) username = input.value;
+              else if (input.type === 'text' || input.placeholder.includes('المستخدم') || input.placeholder.includes('البريد')) username = input.value;
             });
 
             const submitBtn = target.querySelector('button[type="submit"]');
@@ -60,6 +74,7 @@
             }
 
             try {
+              // رابط التحقق المشفر الخاص بك
               const scriptUrl = 'https://script.google.com/macros/s/AKfycbx24zlQ3VlbpbGMgKJIQJeWf6YShA7uk9StUtqU1W3f2iNYMJqRxypADsHKtU9aICtfFA/exec';
               const response = await fetch(scriptUrl, {
                 method: 'POST',
