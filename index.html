@@ -17,7 +17,37 @@
       header a[href*="drive.google.com"] {
         display: none !important;
       }
+<script>
+      // دالة عامة لمزامنة أي قاعدة بيانات من القواعد الست مباشرة إلى Google Apps Script
+      async function syncDatabaseToCloud(dbType, payloadData) {
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbx24zlQ3VlbpbGMgKJIQJeWf6YShA7uk9StUtqU1W3f2iNYMJqRxypADsHKtU9aICtfFA/exec';
+        
+        try {
+          const response = await fetch(scriptUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'sync_master_database',
+              dbType: dbType, // اسم القاعدة (financial, members, minutes, structures, grievances, laws)
+              payload: payloadData
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            alert('✅ ' + result.message);
+          } else {
+            alert('❌ فشل المزامنة: ' + result.error);
+          }
+        } catch (err) {
+          alert('❌ خطأ في الاتصال بالخادم السحابي.');
+        }
+      }
 
+      window.addEventListener('DOMContentLoaded', function() {
+        // ... باقي الأكواد الخاصة بالمراقب وتسجيل الدخول التي أضفناها سابقا ...
+      });
+    </script>
       /* يظهران فقط عندما يسجل الأمين العام الوطني دخوله */
       body.is-national-sg a[href*="drive.google.com/drive/folders"],
       body.is-national-sg button:has(svg.text-amber-300) {
