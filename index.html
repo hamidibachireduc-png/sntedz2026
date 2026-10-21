@@ -25,11 +25,26 @@
         display: inline-flex !important;
       }
     <script>
-     <script>
+     <style>
+      /* إخفاء زري مجلد Drive وشيتات Sheets تلقائياً */
+      a[href*="drive.google.com/drive/folders"],
+      button:has(svg.text-amber-300),
+      header a[href*="drive.google.com"] {
+        display: none !important;
+      }
+
+      /* يظهران فقط عندما يسجل الأمين العام الوطني دخوله */
+      body.is-national-sg a[href*="drive.google.com/drive/folders"],
+      body.is-national-sg button:has(svg.text-amber-300) {
+        display: inline-flex !important;
+      }
+    </style>
+
+    <script>
       // نظام الأمان والحماية المركزية (تخطي التحقق المكشوف)
       window.addEventListener('DOMContentLoaded', function() {
         
-        // 1. التحقق الفوري لإظهار/إخفاء أزرار القيادة (الكود السابق)
+        // 1. التحقق الفوري لإظهار/إخفاء أزرار القيادة
         try {
           var user = JSON.parse(localStorage.getItem('snte_user') || 'null');
           if (user && user.role === 'NATIONAL_SG') {
