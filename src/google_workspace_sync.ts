@@ -6,7 +6,16 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
-import firebaseConfig from '../firebase-applet-config.json';
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBS7XsliuZ-ckNo4xWDn4ynsPxOnWdsmwM",
+  authDomain: "sntedz2022.firebaseapp.com",
+  projectId: "sntedz2022",
+  storageBucket: "sntedz2022.firebasestorage.app",
+  messagingSenderId: "527050734664",
+  appId: "1:527050734664:web:c95b2116fd388b25b9ec7d"
+};
 
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -106,7 +115,6 @@ export const createSpreadsheetInFolder = async (
   headers: string[],
   rows: (string | number)[][]
 ): Promise<{ spreadsheetId: string; webViewLink: string }> => {
-  // 1. Create file in folder via Drive API
   const createRes = await fetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
     method: 'POST',
     headers: {
@@ -128,14 +136,12 @@ export const createSpreadsheetInFolder = async (
   const fileData = await createRes.json();
   const spreadsheetId = fileData.id;
 
-  // 2. Fetch spreadsheet metadata to get the first sheet's title
   const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const metaData = await metaRes.json();
   const firstSheetTitle = metaData.sheets?.[0]?.properties?.title || 'Sheet1';
 
-  // 3. Write data to sheet
   const values = [headers, ...rows];
   const updateRes = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(firstSheetTitle)}!A1?valueInputOption=USER_ENTERED`,
@@ -203,7 +209,6 @@ export const readSpreadsheetValues = async (
   token: string,
   spreadsheetId: string
 ): Promise<{ headers: string[]; rows: string[][] }> => {
-  // 1. Get sheet title
   const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -214,7 +219,6 @@ export const readSpreadsheetValues = async (
   const metaData = await metaRes.json();
   const firstSheetTitle = metaData.sheets?.[0]?.properties?.title || 'Sheet1';
 
-  // 2. Read values
   const valRes = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(firstSheetTitle)}`,
     {
