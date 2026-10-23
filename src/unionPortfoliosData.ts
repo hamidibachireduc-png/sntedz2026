@@ -15,6 +15,7 @@ export interface UnionTopic {
   content?: string;
   author: string;
   date: string;
+  imageUrl?: string;
   fileUrl?: string;
   externalUrl?: string;
   actionText?: string;

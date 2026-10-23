@@ -137,22 +137,21 @@ modalContainer.id = 'sheets-sync-root';
 document.body.appendChild(modalContainer);
 createRoot(modalContainer).render(<GoogleSyncApp />);
 
-// 3. Mount the Union Portfolios and Activities Section
+// 3. Mount the Union Portfolios and Activities Section right at the top below auth bar
 const portfoliosContainer = document.createElement('div');
 portfoliosContainer.id = 'portfolios-section-root';
-const rootEl = document.getElementById('root');
-if (rootEl && rootEl.parentNode) {
-  rootEl.parentNode.insertBefore(portfoliosContainer, rootEl.nextSibling);
+if (authBarContainer.nextSibling) {
+  authBarContainer.parentNode?.insertBefore(portfoliosContainer, authBarContainer.nextSibling);
 } else {
   document.body.appendChild(portfoliosContainer);
 }
 createRoot(portfoliosContainer).render(<UnionPortfoliosSection />);
 
-// 4. Mount the Membership Application Status Tracker Section (with the official background image & emerald green theme)
+// 4. Mount the Membership Application Status Tracker Section below portfolios
 const statusTrackerContainer = document.createElement('div');
 statusTrackerContainer.id = 'membership-status-tracker-root';
-if (portfoliosContainer.parentNode) {
-  portfoliosContainer.parentNode.insertBefore(statusTrackerContainer, portfoliosContainer);
+if (portfoliosContainer.nextSibling) {
+  portfoliosContainer.parentNode?.insertBefore(statusTrackerContainer, portfoliosContainer.nextSibling);
 } else {
   document.body.appendChild(statusTrackerContainer);
 }

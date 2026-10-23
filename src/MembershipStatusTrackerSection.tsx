@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WILAYAS_LIST } from './wilayasList';
 import { MemberData } from './DigitalMembershipCardModal';
 import { getAllMembersWithSeed } from './membershipStatusData';
+import { UnionAnalyticsDashboard } from './UnionAnalyticsDashboard';
 
 export const MembershipStatusTrackerSection: React.FC = () => {
   const [members, setMembers] = useState<MemberData[]>([]);
@@ -9,6 +10,7 @@ export const MembershipStatusTrackerSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'active' | 'rejected'>('pending');
   const [selectedWilayaFilter, setSelectedWilayaFilter] = useState('');
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   // Update clock every second for live ticking countdown
@@ -186,14 +188,22 @@ export const MembershipStatusTrackerSection: React.FC = () => {
             </select>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
               <button
                 type="button"
                 onClick={handleOpenRegister}
-                className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black text-xs shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black text-xs shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
                 <span>🪪</span>
                 <span>تسجيل انخراط جديد</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAnalyticsOpen(true)}
+                className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap border border-emerald-400/40"
+              >
+                <span>📊</span>
+                <span>لوحة القيادة الإحصائية (الرصيد والرتب)</span>
               </button>
             </div>
           </div>
@@ -274,143 +284,28 @@ export const MembershipStatusTrackerSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid of Results */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filteredMembers.slice(0, 6).map((member) => {
-            const statusCat = getStatusCategory(member);
-            const countdown = getTimeRemaining(member.temporaryExpiresAt);
-            const wilayaObj = WILAYAS_LIST.find(
-              (w) => String(w.code).padStart(2, '0') === String(member.wilayaCode).padStart(2, '0')
-            );
-
-            return (
-              <div
-                key={member.id}
-                className="bg-white/95 rounded-3xl p-5 border-2 border-emerald-400/50 shadow-xl text-slate-900 transition-all hover:shadow-2xl flex flex-col justify-between"
-              >
-                <div>
-                  {/* Card Top */}
-                  <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl font-black shrink-0 shadow-xs border ${
-                          statusCat === 'pending'
-                            ? 'bg-amber-100 text-amber-800 border-amber-300'
-                            : statusCat === 'active'
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                            : 'bg-red-100 text-red-800 border-red-300'
-                        }`}
-                      >
-                        {statusCat === 'pending' ? '⏳' : statusCat === 'active' ? '✅' : '❌'}
-                      </div>
-                      <div>
-                        <h4 className="font-black text-base text-gray-950">
-                          {member.fullName}
-                        </h4>
-                        <div className="text-[11px] text-gray-600 font-medium">
-                          ولاية {member.wilayaName} ({member.wilayaCode}) • {member.institutionName}
-                        </div>
-                      </div>
-                    </div>
-
-                    <span className="font-mono font-bold text-xs bg-emerald-50 text-emerald-900 border border-emerald-200 px-2.5 py-1 rounded-xl shrink-0">
-                      {member.membershipCardNo}
-                    </span>
-                  </div>
-
-                  {/* Body Countdown / Status Notice */}
-                  {statusCat === 'pending' && (
-                    <div className="mt-3.5 space-y-2.5">
-                      {/* Live Countdown Box */}
-                      <div
-                        className={`p-3 rounded-2xl border text-xs ${
-                          countdown.isExpired
-                            ? 'bg-red-50 border-red-300 text-red-950'
-                            : countdown.totalHours <= 48
-                            ? 'bg-amber-50 border-amber-400 text-amber-950'
-                            : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="font-black flex items-center gap-1">
-                            <span>{countdown.isExpired ? '⚠️' : '⏳'}</span>
-                            <span>
-                              {countdown.isExpired
-                                ? 'انتهت فترة الأسبوع المؤقتة'
-                                : countdown.totalHours <= 48
-                                ? '⚠️ تنبيه استعجالي: اقتراب انتهاء المهلة'
-                                : 'فترة الولوج التجريبي المؤقت (أسبوع)'}
-                            </span>
-                          </span>
-                          {!countdown.isExpired && (
-                            <div className="font-mono font-bold text-[11px] text-emerald-900">
-                              {countdown.days} ي : {countdown.hours} س : {countdown.minutes} د : {countdown.seconds} ث
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="text-[11px] text-gray-700">
-                          تاريخ الانتهاء: <strong>{formatExpiryDate(member.temporaryExpiresAt)}</strong>
-                        </div>
-                      </div>
-
-                      <p className="text-[11px] text-gray-700 leading-relaxed bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                        📍 <strong>الخطوة القادمة:</strong> دفع الاشتراك السنوي الرمزي (100 دج) واستلام البطاقة الورقية الرسمية من الأمانة الولائية بولاية {member.wilayaName}.
-                      </p>
-                    </div>
-                  )}
-
-                  {statusCat === 'active' && (
-                    <div className="mt-3.5 bg-emerald-50 rounded-2xl p-3 border border-emerald-300 text-xs text-emerald-950">
-                      <div className="font-black flex items-center gap-1.5 mb-1">
-                        <span>✅</span>
-                        <span>عضوية رسمية دائمة ومثبتة</span>
-                      </div>
-                      <p className="text-[11px] text-emerald-800">
-                        تم تسديد اشتراك 100 دج واستلام البطاقة الورقية الرسمية من الأمانة الولائية.
-                      </p>
-                    </div>
-                  )}
-
-                  {statusCat === 'rejected' && (
-                    <div className="mt-3.5 bg-red-50 rounded-2xl p-3 border border-red-300 text-xs text-red-950">
-                      <div className="font-black flex items-center gap-1.5 mb-1">
-                        <span>❌</span>
-                        <span>طلب غير معتمد أو منتهي المهلة</span>
-                      </div>
-                      <p className="text-[11px] text-red-900">
-                        {member.rejectionReason || 'انقضاء مهلة الأسبوع دون سداد الاشتراك واقتناء البطاقة الورقية.'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Card Footer */}
-                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2 text-xs">
-                  {wilayaObj?.phone ? (
-                    <a
-                      href={`tel:${wilayaObj.phone}`}
-                      className="text-blue-700 hover:underline font-bold flex items-center gap-1 text-[11px]"
-                    >
-                      <span>📞 اتصال:</span>
-                      <span dir="ltr">{wilayaObj.phone}</span>
-                    </a>
-                  ) : (
-                    <span className="text-[11px] text-gray-500">NIN: {member.nationalId}</span>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={handleOpenStatusModal}
-                    className="text-[#006633] hover:text-[#004d26] font-black text-xs hover:underline cursor-pointer flex items-center gap-1"
-                  >
-                    <span>عرض التفاصيل الكاملة</span>
-                    <span>←</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+        {/* Secure Privacy Lookup Box replacing public name cards */}
+        <div className="bg-gradient-to-r from-emerald-950 via-[#004d26] to-emerald-950 rounded-3xl p-8 sm:p-12 text-center border-2 border-amber-400/60 shadow-2xl max-w-3xl mx-auto my-6">
+          <div className="w-16 h-16 bg-amber-400 text-emerald-950 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 shadow-inner border border-amber-300 font-black">
+            🔒
+          </div>
+          <span className="bg-amber-400 text-emerald-950 text-xs font-black px-4 py-1.5 rounded-full inline-block mb-3 shadow-xs">
+            سرية وخصوصية البيانات الشخصية للمنخرطين
+          </span>
+          <h3 className="text-xl sm:text-2xl font-black text-white mb-3">
+            تم إخفاء بطاقات الأسماء العامة حمايةً لخصوصية المنخرطين الجدد
+          </h3>
+          <p className="text-xs sm:text-sm text-emerald-100 max-w-xl mx-auto leading-relaxed mb-6 font-medium">
+            للاستعلام عن وضعية طلب انخراطك أو متابعة العد التنازلي للأسبوع التجريبي، يرجى إدخال <strong className="text-amber-300 font-mono">رقم التعريف الوطني (NIN)</strong> أو <strong className="text-amber-300 font-mono">رقم البطاقة</strong> في خانة البحث أعلاه، أو الضغط على زر الاستعلام الشامل أدناه.
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenStatusModal}
+            className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black px-8 py-3.5 rounded-2xl text-xs sm:text-sm shadow-xl transition-all cursor-pointer inline-flex items-center gap-2 border border-amber-300"
+          >
+            <span>🔎</span>
+            <span>فتح نافذة الاستعلام الآمن عن حالة العضوية</span>
+          </button>
         </div>
 
         {/* View All & Full Tracker Action Banner */}
@@ -425,6 +320,7 @@ export const MembershipStatusTrackerSection: React.FC = () => {
           </button>
         </div>
       </div>
+      <UnionAnalyticsDashboard isOpen={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} />
     </section>
   );
 };

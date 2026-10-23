@@ -9,6 +9,7 @@ import { PendingMembersReviewModal } from './PendingMembersReviewModal';
 import { UnionHierarchyModal } from './UnionHierarchyModal';
 import { AdminNotificationsModal } from './AdminNotificationsModal';
 import { MembershipStatusModal } from './MembershipStatusModal';
+import { NationalSGThemeCustomizerModal } from './NationalSGThemeCustomizerModal';
 import {
   SnteNotification,
   generateDynamicNotifications,
@@ -35,6 +36,7 @@ export const TopAuthBar: React.FC = () => {
   const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
   const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [notifications, setNotifications] = useState<SnteNotification[]>([]);
   const [toastNotification, setToastNotification] = useState<SnteNotification | null>(null);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
@@ -723,6 +725,15 @@ export const TopAuthBar: React.FC = () => {
                   <span>➕</span>
                   <span className="hidden sm:inline">نشر مباشر</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomizerOpen(true)}
+                  className="bg-cyan-700 hover:bg-cyan-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-400"
+                  title="لوحة تحكم الأمين العام الوطني لتخصيص الأقسام، المظهر، وتعديل الصور"
+                >
+                  <span>🎨</span>
+                  <span className="hidden sm:inline">لوحة المظهر والصور</span>
+                </button>
               </div>
             ) : isWilayaOrRegionalSG ? (
               <div className="flex items-center gap-1.5">
@@ -1147,6 +1158,7 @@ export const TopAuthBar: React.FC = () => {
           </div>
         </aside>
       )}
+      <NationalSGThemeCustomizerModal isOpen={isCustomizerOpen} onClose={() => setIsCustomizerOpen(false)} />
     </>
   );
 };

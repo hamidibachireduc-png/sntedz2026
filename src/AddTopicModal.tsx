@@ -24,6 +24,7 @@ export const AddTopicModal: React.FC<AddTopicModalProps> = ({
   const [author, setAuthor] = useState('الأمانة العامة الوطنية');
   const [wilayaCode, setWilayaCode] = useState('');
   const [region, setRegion] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
   const [externalUrl, setExternalUrl] = useState('');
   const [actionText, setActionText] = useState('تحميل / استعراض الوثيقة');
@@ -41,6 +42,7 @@ export const AddTopicModal: React.FC<AddTopicModalProps> = ({
       setAuthor(initialTopic.author || 'الأمانة العامة الوطنية');
       setWilayaCode(initialTopic.wilayaCode || '');
       setRegion(initialTopic.region || '');
+      setImageUrl(initialTopic.imageUrl || '');
       setFileUrl(initialTopic.fileUrl || '');
       setExternalUrl(initialTopic.externalUrl || '');
       setActionText(initialTopic.actionText || 'تحميل / استعراض الوثيقة');
@@ -54,6 +56,7 @@ export const AddTopicModal: React.FC<AddTopicModalProps> = ({
       setAuthor('الأمانة العامة الوطنية');
       setWilayaCode('');
       setRegion('');
+      setImageUrl('');
       setFileUrl('');
       setExternalUrl('');
       setActionText('تحميل / استعراض الوثيقة');
@@ -98,6 +101,7 @@ export const AddTopicModal: React.FC<AddTopicModalProps> = ({
         content: content.trim() || undefined,
         author: author.trim() || 'الأمانة العامة الوطنية - S.N.T.E',
         date: initialTopic ? initialTopic.date : new Date().toISOString().split('T')[0],
+        imageUrl: imageUrl.trim() || undefined,
         fileUrl: fileUrl.trim() || undefined,
         externalUrl: externalUrl.trim() || undefined,
         actionText: actionText.trim() || 'عرض التفاصيل',
@@ -329,6 +333,52 @@ export const AddTopicModal: React.FC<AddTopicModalProps> = ({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Topic Image Cover Section (صورة الموضوع والمشاركة) */}
+          <div className="bg-gradient-to-r from-emerald-50/60 via-amber-50/40 to-emerald-50/40 p-3.5 rounded-2xl border border-emerald-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🖼️</span>
+                <span className="text-xs font-black text-gray-900">
+                  صورة الموضوع البارزة (تظهر عند النشر والمشاركة بمواقع التواصل)
+                </span>
+              </div>
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                صورة الغلاف والمنصات
+              </span>
+            </div>
+            <input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://... رابط الصورة البارزة للموضوع أو البيان"
+              className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-[#006633] bg-white"
+            />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-gray-500 font-bold">صور سريعة معتمدة:</span>
+              <button
+                type="button"
+                onClick={() => setImageUrl('/assets/aistudio/WhatsApp_Image_2026-10-11_at_16.38.53_a3613cf2.jpeg')}
+                className="text-[10px] bg-emerald-100 hover:bg-emerald-200 text-[#006633] px-2.5 py-1 rounded-lg border border-emerald-300 cursor-pointer font-bold"
+              >
+                🖼️ شعار التطبيق الرسمي (02)
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageUrl('/assets/aistudio/image_536697ab.png')}
+                className="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-950 px-2.5 py-1 rounded-lg border border-amber-300 cursor-pointer font-bold"
+              >
+                📱 صورة المنصات الرقمية
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageUrl('')}
+                className="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2.5 py-1 rounded-lg border border-gray-300 cursor-pointer"
+              >
+                ✕ إزالة الصورة
+              </button>
+            </div>
           </div>
 
           {/* HTML Web Apps & Google Drive Links Section */}

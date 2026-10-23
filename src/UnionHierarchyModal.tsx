@@ -6,7 +6,9 @@ import {
   HierarchyLevelKey,
   HierarchyStructure,
   HierarchyLevel,
+  OFFICIAL_UNION_ROLES,
 } from './unionHierarchy';
+import { WILAYAS_LIST } from './wilayasList';
 
 interface UnionHierarchyModalProps {
   isOpen: boolean;
@@ -25,6 +27,14 @@ export const UnionHierarchyModal: React.FC<UnionHierarchyModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStructure, setActiveStructure] = useState<HierarchyStructure | null>(null);
   const [viewMode, setViewMode] = useState<'ladder' | 'cards'>('ladder');
+
+  // New Leadership Account Installation Modal State
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [installName, setInstallName] = useState('');
+  const [installRole, setInstallRole] = useState('أمين عام ولائي (تحكم ولائي)');
+  const [installEmail, setInstallEmail] = useState('');
+  const [installWilayaCode, setInstallWilayaCode] = useState('16');
+  const [installSuccessMsg, setInstallSuccessMsg] = useState('');
 
   if (!isOpen) return null;
 
@@ -93,6 +103,21 @@ export const UnionHierarchyModal: React.FC<UnionHierarchyModalProps> = ({
               <p className="text-xs sm:text-sm text-emerald-100 mt-0.5">
                 دليل المستويات القيادية، التشريعية، الاستشارية والقاعدية للنقابة الوطنية لعمال التربية
               </p>
+            </div>
+          </div>
+
+          {/* Quick Install Leadership Account Button matching user screenshot */}
+          <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setIsInstallModalOpen(true)}
+              className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black text-xs px-4 py-2 rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer border border-amber-300"
+            >
+              <span>+</span>
+              <span>تنصيب وإنشاء حساب قيادي جديد</span>
+            </button>
+            <div className="text-[11px] text-emerald-200 font-medium">
+              إدارة وتنصيب الرتب وفق السلم النقابي المعتمد
             </div>
           </div>
 
@@ -497,6 +522,137 @@ export const UnionHierarchyModal: React.FC<UnionHierarchyModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Install Leadership Account Modal */}
+      {isInstallModalOpen && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 font-['Cairo',sans-serif]">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 text-slate-900 border-2 border-emerald-600 shadow-2xl text-right">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+              <h3 className="text-base font-black text-emerald-950 flex items-center gap-2">
+                <span>👑</span>
+                <span>تنصيب وإنشاء حساب قيادي جديد</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsInstallModalOpen(false)}
+                className="text-gray-400 hover:text-gray-700 text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {installSuccessMsg ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-emerald-900 text-center font-bold text-xs space-y-3">
+                <p>{installSuccessMsg}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsInstallModalOpen(false);
+                    setInstallSuccessMsg('');
+                  }}
+                  className="px-4 py-2 bg-[#006633] text-white rounded-xl text-xs font-bold cursor-pointer shadow-md"
+                >
+                  تم
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!installName.trim()) {
+                    alert('يرجى إدخال الاسم واللقب');
+                    return;
+                  }
+                  const newAccount = {
+                    id: 'ldr-' + Date.now(),
+                    name: installName,
+                    title: installRole,
+                    role: installRole.includes('وطني') ? 'NATIONAL_SG' : 'WILAYA_SG',
+                    email: installEmail || 'leader@snte-dz.org',
+                    wilayaCode: installWilayaCode,
+                    wilayaName: WILAYAS_LIST.find((w) => w.code === installWilayaCode)?.name || 'الولاية',
+                    status: 'قيادي رسمي مُنصّب',
+                    createdAt: Date.now(),
+                  };
+                  const existing = JSON.parse(localStorage.getItem('snte_accounts_v3') || '[]');
+                  localStorage.setItem('snte_accounts_v3', JSON.stringify([newAccount, ...existing]));
+                  setInstallSuccessMsg(`✅ تم تنصيب "${installName}" في صفة "${installRole}" بنجاح وتفعيل الحساب القيادي.`);
+                }}
+                className="space-y-4 text-xs font-bold"
+              >
+                <div>
+                  <label className="block text-gray-700 mb-1">الاسم واللقب:</label>
+                  <input
+                    type="text"
+                    required
+                    value={installName}
+                    onChange={(e) => setInstallName(e.target.value)}
+                    placeholder="مثال: بن يحي مصطفى"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:ring-2 focus:ring-[#006633] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-1">الصفة النقابية والمستوى في السلم النقابي:</label>
+                  <select
+                    value={installRole}
+                    onChange={(e) => setInstallRole(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs bg-white focus:ring-2 focus:ring-[#006633] outline-none cursor-pointer"
+                  >
+                    {OFFICIAL_UNION_ROLES.map((role) => (
+                      <option key={role.id} value={role.title}>
+                        {role.title} ({role.level})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-1">البريد الإلكتروني:</label>
+                  <input
+                    type="email"
+                    value={installEmail}
+                    onChange={(e) => setInstallEmail(e.target.value)}
+                    placeholder="name@snte.dz"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:ring-2 focus:ring-[#006633] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-1">الولاية أو الهيكل المعني:</label>
+                  <select
+                    value={installWilayaCode}
+                    onChange={(e) => setInstallWilayaCode(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs bg-white focus:ring-2 focus:ring-[#006633] outline-none cursor-pointer"
+                  >
+                    {WILAYAS_LIST.map((w) => (
+                      <option key={w.code} value={w.code}>
+                        ولاية {w.code} - {w.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsInstallModalOpen(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-[#006633] hover:bg-[#004d26] text-white rounded-xl font-black shadow-md cursor-pointer"
+                  >
+                    تنصيب واعتماد الحساب
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

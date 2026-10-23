@@ -490,29 +490,31 @@ export const getStructuresByLevel = (levelKey: HierarchyLevelKey): HierarchyStru
 
 // Flattened list of official role titles for dropdowns and selections
 export const OFFICIAL_UNION_ROLES = [
-  // المستوى الوطني
+  // المستوى الوطني والتنسيقي
   { id: 'national-sg', title: 'أمين عام وطني', level: 'المستوى الوطني', category: 'national', icon: '👑' },
   { id: 'national-congress', title: 'عضو مؤتمر وطني', level: 'المستوى الوطني', category: 'national', icon: '🏛️' },
   { id: 'national-council', title: 'عضو مجلس وطني', level: 'المستوى الوطني', category: 'national', icon: '📜' },
   { id: 'national-secretariat', title: 'الأمانة الوطنية', level: 'المستوى الوطني', category: 'national', icon: '💼' },
   { id: 'regional-coordination', title: 'الأمانة الجهوية للتنسيق', level: 'المستوى الوطني', category: 'national', icon: '🌐' },
-  { id: 'national-corps', title: 'تنسيقات وطنية للرتب والأسلاك', level: 'المستوى الوطني', category: 'national', icon: '🎯' },
+  { id: 'regional-office-chief', title: 'رئيس مكتب التنسيق الجهوي (تحكم جهوي تنسيقي)', level: 'المستوى الجهوي التنسيقي', category: 'regional', icon: '🌐' },
+  { id: 'regional-sg-office', title: 'أمين عام التنسيقية الجهوية (تحكم جهوي)', level: 'المستوى الجهوي التنسيقي', category: 'regional', icon: '🌐' },
+  { id: 'national-corps', title: 'تنسيقيات وطنية للرتب والأسلاك (تحكم وطني تنسيقي)', level: 'المستوى الوطني والتنسيقي', category: 'national', icon: '🎯' },
   { id: 'elders-council', title: 'لجنة الحكماء (المتقاعدين)', level: 'المستوى الوطني', category: 'national', icon: '👴' },
   { id: 'advisor-legal', title: 'مستشار الشؤون القانونية والمنازعات', level: 'المستوى الوطني (المستشارون)', category: 'national', icon: '⚖️' },
   { id: 'advisor-pedagogy', title: 'مستشار شؤون التربية والبيداغوجيا', level: 'المستوى الوطني (المستشارون)', category: 'national', icon: '🎓' },
   { id: 'advisor-media', title: 'مسؤولة عامة للخلية الوطنية للإعلام والتنظيم', level: 'المستوى الوطني (المستشارون)', category: 'national', icon: '📢' },
   { id: 'advisor-comm', title: 'مستشار المكلف بتقنيات التواصل والرقمنة', level: 'المستوى الوطني (المستشارون)', category: 'national', icon: '💻' },
   // المستوى الولائي
-  { id: 'wilaya-sg', title: 'أمين عام ولائي', level: 'المستوى الولائي', category: 'wilaya', icon: '🏛️' },
+  { id: 'wilaya-sg', title: 'أمين عام ولائي (تحكم ولائي)', level: 'المستوى الولائي', category: 'wilaya', icon: '🏛️' },
   { id: 'wilaya-council', title: 'عضو مجلس ولائي', level: 'المستوى الولائي', category: 'wilaya', icon: '📋' },
   { id: 'wilaya-secretariat', title: 'الأمانة الولائية', level: 'المستوى الولائي', category: 'wilaya', icon: '🏬' },
   { id: 'wilaya-corps', title: 'تنسيقيات ولائية للرتب والأسلاك', level: 'المستوى الولائي', category: 'wilaya', icon: '🏷️' },
   // المستوى البلدي
-  { id: 'municipal-sg', title: 'أمين عام بلدي', level: 'المستوى البلدي', category: 'municipal', icon: '🏢' },
+  { id: 'municipal-sg', title: 'أمين عام بلدي (تحكم بلدي)', level: 'المستوى البلدي', category: 'municipal', icon: '🏢' },
   { id: 'municipal-council', title: 'عضو مجلس بلدي', level: 'المستوى البلدي', category: 'municipal', icon: '👥' },
   { id: 'municipal-secretariat', title: 'الأمانة البلدية', level: 'المستوى البلدي', category: 'municipal', icon: '📑' },
   // مستوى المؤسسات التعليمية والفروع
-  { id: 'branch-sg', title: 'أمين عام فرع نقابي', level: 'مستوى المؤسسات والفروع', category: 'school_branch', icon: '🏫' },
+  { id: 'branch-sg', title: 'أمين عام فرع نقابي (تحكم بمؤسسة)', level: 'مستوى المؤسسات والفروع', category: 'school_branch', icon: '🏫' },
   { id: 'branch-assembly-member', title: 'عضو جمعية عامة فرع نقابي', level: 'مستوى المؤسسات والفروع', category: 'school_branch', icon: '🗳️' },
   { id: 'branch-secretariat', title: 'أمانة الفرع النقابي', level: 'مستوى المؤسسات والفروع', category: 'school_branch', icon: '🤝' },
   // منخرط
