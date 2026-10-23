@@ -4,8 +4,9 @@
  */
 
 // @ts-ignore
-import SnteApp from './snte_bundle.js';
+import SnteApp from './snte_app.jsx';
 
 export default function App() {
   return <SnteApp />;
 }
+

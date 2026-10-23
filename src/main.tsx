@@ -3,6 +3,8 @@ import './index.css';
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GoogleDriveSheetsSyncModal } from './GoogleDriveSheetsSyncModal';
+import { TopAuthBar } from './TopAuthBar';
+import { UnionPortfoliosSection } from './UnionPortfoliosSection';
 
 function GoogleSyncApp() {
   const [isOpen, setIsOpen] = useState(false);
@@ -118,8 +120,29 @@ function GoogleSyncApp() {
   );
 }
 
-// Mount the sync modal into a dedicated element
+// 1. Mount the Top Universal AuthBar into the very top of document.body
+const authBarContainer = document.createElement('div');
+authBarContainer.id = 'snte-auth-bar-root';
+if (document.body.firstChild) {
+  document.body.insertBefore(authBarContainer, document.body.firstChild);
+} else {
+  document.body.appendChild(authBarContainer);
+}
+createRoot(authBarContainer).render(<TopAuthBar />);
+
+// 2. Mount the sync modal into a dedicated element
 const modalContainer = document.createElement('div');
 modalContainer.id = 'sheets-sync-root';
 document.body.appendChild(modalContainer);
 createRoot(modalContainer).render(<GoogleSyncApp />);
+
+// 3. Mount the Union Portfolios and Activities Section
+const portfoliosContainer = document.createElement('div');
+portfoliosContainer.id = 'portfolios-section-root';
+const rootEl = document.getElementById('root');
+if (rootEl && rootEl.parentNode) {
+  rootEl.parentNode.insertBefore(portfoliosContainer, rootEl.nextSibling);
+} else {
+  document.body.appendChild(portfoliosContainer);
+}
+createRoot(portfoliosContainer).render(<UnionPortfoliosSection />);
