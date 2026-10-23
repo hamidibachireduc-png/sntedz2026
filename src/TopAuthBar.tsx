@@ -7,6 +7,13 @@ import { RequestPublicationModal } from './RequestPublicationModal';
 import { PublicationRequestsReviewModal } from './PublicationRequestsReviewModal';
 import { PendingMembersReviewModal } from './PendingMembersReviewModal';
 import { UnionHierarchyModal } from './UnionHierarchyModal';
+import { AdminNotificationsModal } from './AdminNotificationsModal';
+import { MembershipStatusModal } from './MembershipStatusModal';
+import {
+  SnteNotification,
+  generateDynamicNotifications,
+  playNotificationChime,
+} from './notificationsSystem';
 import { WILAYAS_LIST, WilayaData } from './wilayasList';
 import {
   TopicCategory,
@@ -26,6 +33,10 @@ export const TopAuthBar: React.FC = () => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isPendingMembersOpen, setIsPendingMembersOpen] = useState(false);
   const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
+  const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<SnteNotification[]>([]);
+  const [toastNotification, setToastNotification] = useState<SnteNotification | null>(null);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
   const [isPortfoliosDropdownOpen, setIsPortfoliosDropdownOpen] = useState(false);
   const [activeMemberData, setActiveMemberData] = useState<MemberData | null>(null);
@@ -134,10 +145,31 @@ export const TopAuthBar: React.FC = () => {
     }
   };
 
+  const loadNotifications = (triggerAlert = false) => {
+    try {
+      const uRaw = localStorage.getItem('snte_user');
+      const u = uRaw ? JSON.parse(uRaw) : null;
+      if (!u) {
+        setNotifications([]);
+        return;
+      }
+      const list = generateDynamicNotifications(u);
+      setNotifications(list);
+      const unread = list.filter((n) => !n.read);
+      if (triggerAlert && unread.length > 0) {
+        playNotificationChime();
+        setToastNotification(unread[0]);
+      }
+    } catch {
+      setNotifications([]);
+    }
+  };
+
   useEffect(() => {
     refreshUser();
     loadRequestsCount();
     loadPendingMembersCount();
+    loadNotifications(false);
 
     // Listen to external open requests from anywhere in the app
     const handleOpenLogin = () => setIsLoginOpen(true);
@@ -148,25 +180,35 @@ export const TopAuthBar: React.FC = () => {
     };
     const handleOpenPendingMembers = () => setIsPendingMembersOpen(true);
     const handleOpenHierarchy = () => setIsHierarchyOpen(true);
+    const handleOpenNotifications = () => setIsNotificationsModalOpen(true);
+    const handleOpenStatus = () => setIsStatusModalOpen(true);
+    const handleNotifsUpdate = () => loadNotifications(false);
+    const handleMemberRegistered = () => {
+      refreshUser();
+      loadPendingMembersCount();
+      loadNotifications(true);
+    };
 
     window.addEventListener('snte-open-login', handleOpenLogin);
     window.addEventListener('snte-open-register', handleOpenRegister);
     window.addEventListener('snte-open-member-card', handleOpenCard);
     window.addEventListener('snte-open-pending-members', handleOpenPendingMembers);
     window.addEventListener('snte-open-hierarchy', handleOpenHierarchy);
+    window.addEventListener('snte-open-notifications', handleOpenNotifications);
+    window.addEventListener('snte-open-membership-status', handleOpenStatus);
+    window.addEventListener('snte-notifications-updated', handleNotifsUpdate);
     window.addEventListener('snte-topic-published', loadRequestsCount);
     window.addEventListener('snte-members-updated', () => {
       refreshUser();
       loadPendingMembersCount();
+      loadNotifications(false);
     });
-    window.addEventListener('snte-member-registered', () => {
-      refreshUser();
-      loadPendingMembersCount();
-    });
+    window.addEventListener('snte-member-registered', handleMemberRegistered);
     window.addEventListener('storage', () => {
       refreshUser();
       loadRequestsCount();
       loadPendingMembersCount();
+      loadNotifications(false);
     });
 
     (window as any).openSnteLogin = handleOpenLogin;
@@ -174,6 +216,13 @@ export const TopAuthBar: React.FC = () => {
     (window as any).openSnteCard = handleOpenCard;
     (window as any).openSntePendingMembers = handleOpenPendingMembers;
     (window as any).openSnteHierarchy = handleOpenHierarchy;
+    (window as any).openSnteNotifications = handleOpenNotifications;
+    (window as any).openSnteMembershipStatus = handleOpenStatus;
+
+    // Periodic notification checks (e.g. check expiration countdowns)
+    const notifTimer = setInterval(() => {
+      loadNotifications(false);
+    }, 45000);
 
     // Handle outside clicks for dropdown
     const handleClickOutside = (event: MouseEvent) => {
@@ -184,12 +233,17 @@ export const TopAuthBar: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
+      clearInterval(notifTimer);
       window.removeEventListener('snte-open-login', handleOpenLogin);
       window.removeEventListener('snte-open-register', handleOpenRegister);
       window.removeEventListener('snte-open-member-card', handleOpenCard);
       window.removeEventListener('snte-open-pending-members', handleOpenPendingMembers);
       window.removeEventListener('snte-open-hierarchy', handleOpenHierarchy);
+      window.removeEventListener('snte-open-notifications', handleOpenNotifications);
+      window.removeEventListener('snte-open-membership-status', handleOpenStatus);
+      window.removeEventListener('snte-notifications-updated', handleNotifsUpdate);
       window.removeEventListener('snte-topic-published', loadRequestsCount);
+      window.removeEventListener('snte-member-registered', handleMemberRegistered);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
@@ -227,7 +281,7 @@ export const TopAuthBar: React.FC = () => {
     );
     // Scroll to the specific dedicated section
     const targetId =
-      catKey === 'wilaya_acts' || catKey === 'region_acts'
+      catKey === 'national_acts' || catKey === 'wilaya_acts' || catKey === 'region_acts'
         ? 'unionActivitiesSection'
         : 'memberServicesSection';
     const elem = document.getElementById(targetId) || document.getElementById('unionPortfoliosSection');
@@ -617,6 +671,17 @@ export const TopAuthBar: React.FC = () => {
               )}
             </div>
 
+            {/* 4. زر حالة طلبات الانخراط (قيد الانتظار، مقبول، مرفوض) */}
+            <button
+              type="button"
+              onClick={() => setIsStatusModalOpen(true)}
+              className="bg-[#002d16] hover:bg-[#004020] text-amber-300 px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border border-amber-400/50 shadow-xs transition-all cursor-pointer"
+              title="متابعة حالة طلبات الانخراط (قيد الانتظار، مقبول، مرفوض) والعد التنازلي للمهلة"
+            >
+              <span>🔎</span>
+              <span>حالة طلبات الانخراط</span>
+            </button>
+
             {/* Role-tailored Action Buttons in Top Bar */}
             {isNationalSG ? (
               <div className="flex items-center gap-1.5">
@@ -713,6 +778,23 @@ export const TopAuthBar: React.FC = () => {
             {currentUser ? (
               // Logged in state
               <div className="flex items-center gap-2 flex-wrap">
+                {/* Notifications Bell for National & Wilaya/Regional SGs */}
+                {(isNationalSG || isWilayaOrRegionalSG) && (
+                  <button
+                    type="button"
+                    onClick={() => setIsNotificationsModalOpen(true)}
+                    className="relative bg-white/10 hover:bg-white/20 text-white p-2 rounded-xl border border-white/20 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+                    title="مركز التنبيهات والإشعارات (منخرطون جدد، تنبيهات الأسبوع، والترخيص)"
+                  >
+                    <span className="text-sm">🔔</span>
+                    {notifications.filter((n) => !n.read).length > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full font-mono border-2 border-[#00371b] animate-bounce shadow-md">
+                        {notifications.filter((n) => !n.read).length}
+                      </span>
+                    )}
+                  </button>
+                )}
+
                 <div className="flex items-center gap-2 bg-black/30 border border-white/15 px-3 py-1 rounded-xl">
                   {getRoleBadge()}
                   <span className="font-extrabold text-xs text-white max-w-[150px] truncate">
@@ -763,6 +845,17 @@ export const TopAuthBar: React.FC = () => {
             ) : (
               // Logged out state
               <div className="flex items-center gap-2 flex-wrap">
+                {/* Quick Application Status Lookup */}
+                <button
+                  type="button"
+                  onClick={() => setIsStatusModalOpen(true)}
+                  className="bg-white/10 hover:bg-white/20 text-amber-300 font-bold text-xs sm:text-sm px-3.5 py-1.5 rounded-xl transition-all cursor-pointer border border-amber-300/40 flex items-center gap-1.5"
+                  title="استعلام فوري عن حالة طلب الانخراط للمنخرطين الجدد"
+                >
+                  <span>🔎</span>
+                  <span>حالة طلبي</span>
+                </button>
+
                 {/* Login Button */}
                 <button
                   type="button"
@@ -850,6 +943,15 @@ export const TopAuthBar: React.FC = () => {
                 </div>
 
                 <div className="flex sm:flex-col gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsStatusModalOpen(true)}
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-emerald-950 text-xs font-black px-3 py-2 rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors border border-amber-600"
+                    title="تتبع حالة طلبي والعد التنازلي للمهلة المؤقتة"
+                  >
+                    <span>🔎</span>
+                    <span>تفاصيل طلبي وتنبيه المهلة</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIsCardOpen(true)}
@@ -955,6 +1057,96 @@ export const TopAuthBar: React.FC = () => {
           setIsRegisterOpen(true);
         }}
       />
+
+      {/* Admin & Wilaya SG Notifications Modal */}
+      <AdminNotificationsModal
+        isOpen={isNotificationsModalOpen}
+        onClose={() => setIsNotificationsModalOpen(false)}
+        notifications={notifications}
+        currentUser={currentUser}
+        onOpenPendingMembers={() => setIsPendingMembersOpen(true)}
+        onOpenReviewRequests={() => setIsReviewModalOpen(true)}
+        onRefreshNotifications={() => loadNotifications(false)}
+      />
+
+      {/* Membership Application Status Tracker Modal */}
+      <MembershipStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        onOpenRegister={() => {
+          setIsStatusModalOpen(false);
+          setIsRegisterOpen(true);
+        }}
+        onOpenCard={(m) => {
+          setActiveMemberData(m);
+          setIsStatusModalOpen(false);
+          setIsCardOpen(true);
+        }}
+        onOpenLogin={() => {
+          setIsStatusModalOpen(false);
+          setIsLoginOpen(true);
+        }}
+      />
+
+      {/* Real-time Floating Toast Alert */}
+      {toastNotification && (
+        <aside
+          aria-label="إشعار فوري جديد"
+          className="fixed top-16 left-4 z-50 max-w-sm bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-amber-400 backdrop-blur-md flex items-start gap-3 font-['Cairo',sans-serif]"
+        >
+          <span className="text-2xl shrink-0">🔔</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <h5 className="font-black text-xs text-amber-300 truncate">
+                {toastNotification.title}
+              </h5>
+              <button
+                type="button"
+                onClick={() => setToastNotification(null)}
+                className="text-gray-400 hover:text-white text-xs cursor-pointer p-0.5"
+                title="إغلاق الإشعار"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-200 mt-1 leading-relaxed line-clamp-2">
+              {toastNotification.message}
+            </p>
+            <div className="mt-2.5 flex items-center gap-2">
+              {toastNotification.type.includes('temporary') || toastNotification.type === 'new_member' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setToastNotification(null);
+                    setIsPendingMembersOpen(true);
+                  }}
+                  className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-black text-[10px] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-xs"
+                >
+                  معالجة وسداد (100 دج)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setToastNotification(null);
+                    setIsNotificationsModalOpen(true);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-xs"
+                >
+                  عرض التفاصيل
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setToastNotification(null)}
+                className="text-[10px] text-gray-400 hover:underline cursor-pointer"
+              >
+                تجاهل
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
     </>
   );
 };

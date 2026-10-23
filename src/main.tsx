@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { GoogleDriveSheetsSyncModal } from './GoogleDriveSheetsSyncModal';
 import { TopAuthBar } from './TopAuthBar';
 import { UnionPortfoliosSection } from './UnionPortfoliosSection';
+import { MembershipStatusTrackerSection } from './MembershipStatusTrackerSection';
 
 function GoogleSyncApp() {
   const [isOpen, setIsOpen] = useState(false);
@@ -146,3 +147,13 @@ if (rootEl && rootEl.parentNode) {
   document.body.appendChild(portfoliosContainer);
 }
 createRoot(portfoliosContainer).render(<UnionPortfoliosSection />);
+
+// 4. Mount the Membership Application Status Tracker Section (with the official background image & emerald green theme)
+const statusTrackerContainer = document.createElement('div');
+statusTrackerContainer.id = 'membership-status-tracker-root';
+if (portfoliosContainer.parentNode) {
+  portfoliosContainer.parentNode.insertBefore(statusTrackerContainer, portfoliosContainer);
+} else {
+  document.body.appendChild(statusTrackerContainer);
+}
+createRoot(statusTrackerContainer).render(<MembershipStatusTrackerSection />);

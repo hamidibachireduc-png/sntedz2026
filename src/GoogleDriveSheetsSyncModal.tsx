@@ -8,6 +8,8 @@ import {
   createSpreadsheetInFolder,
   uploadJsonToFolder,
   readSpreadsheetValues,
+  syncSpreadsheetInPlace,
+  uploadOrUpdateJsonInFolder,
   DriveSheetFile,
   TARGET_FOLDER_ID,
   TARGET_FOLDER_URL
@@ -103,14 +105,13 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
     }
   };
 
-  // 1. Export Finances (الملف المالي)
+  // 1. In-Place Sync Finances (الملف المالي في نفس الشيت)
   const handleExportFinances = async () => {
     if (!token) return;
     setIsLoading(true);
-    setStatusMessage({ type: 'info', text: 'جاري إنشاء جدول الملف المالي والاشتراكات في Google Sheets...' });
+    setStatusMessage({ type: 'info', text: 'جاري مزامنة الملف المالي في نفس الشيت مع الحفاظ على كافة السجلات السابقة...' });
     try {
-      const dateStr = new Date().toISOString().split('T')[0];
-      const title = `الملف المالي والاشتراكات النقابية (50-50) - SNTE - ${dateStr}`;
+      const canonicalTitle = 'الملف المالي والاشتراكات النقابية (50-50) - SNTE الموحد';
       const headers = [
         'معرف المعاملة',
         'رقم الوصل الرسمي',
@@ -147,27 +148,45 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         ];
       });
 
-      await createSpreadsheetInFolder(token, title, headers, rows);
+      const res = await syncSpreadsheetInPlace(token, canonicalTitle, headers, rows, 0, 1);
+      
+      // If there are records in the sheet that were not in local state, update local state
+      if (res.mergedRows && res.mergedRows.length > finances.length && onImportFinances) {
+        const updatedLocals = res.mergedRows.map((r, idx) => ({
+          id: r[0] || `fin-synced-${idx}`,
+          transactionNo: r[1] || `وصل-${idx + 1}`,
+          date: r[2] || new Date().toISOString().split('T')[0],
+          wilayaCode: r[3] || '01',
+          wilayaName: r[4] || 'أدرار',
+          type: r[5] || 'اشتراك سنوي (100 دج)',
+          amount: Number(r[6]) || 0,
+          direction: r[7] || 'إيراد',
+          recordedBy: r[10] || 'أمين المالية',
+          description: r[11] || '',
+          receiptNumber: r[12] || ''
+        }));
+        onImportFinances(updatedLocals);
+      }
+
       setStatusMessage({
         type: 'success',
-        text: `تم حفظ ${finances.length} سند ومعاملة مالية بنجاح في Google Sheets داخل الفولدر!`
+        text: `✅ تمت مزامنة الملف المالي في نفس الشيت بنجاح! الإجمالي: ${res.totalCount} معاملة (تم الحفاظ على ${res.existingCount} معتمد ومزامنة ${res.addedCount} جديد دون تكرار أو حذف).`
       });
       await loadFolderFiles(token);
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: `فشل الحفظ: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `فشل مزامنة الملف المالي: ${err.message}` });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 2. Export Members
+  // 2. In-Place Sync Members (قاعدة بيانات المنخرطين في نفس الشيت)
   const handleExportMembers = async () => {
     if (!token) return;
     setIsLoading(true);
-    setStatusMessage({ type: 'info', text: 'جاري إنشاء جدول بيانات المنخرطين في Google Sheets...' });
+    setStatusMessage({ type: 'info', text: 'جاري مزامنة قاعدة بيانات المنخرطين في نفس الشيت مع الحفاظ على كل المسجلين...' });
     try {
-      const dateStr = new Date().toISOString().split('T')[0];
-      const title = `قاعدة بيانات المنخرطين - SNTE - ${dateStr}`;
+      const canonicalTitle = 'قاعدة بيانات المنخرطين - SNTE الموحدة';
       const headers = [
         'معرف المنخرط',
         'الاسم واللقب',
@@ -187,6 +206,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         'تاريخ الانخراط'
       ];
 
+      const dateStr = new Date().toISOString().split('T')[0];
       const rows = members.map((m) => [
         m.id || '',
         m.fullName || '',
@@ -206,27 +226,51 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         m.joinDate || dateStr
       ]);
 
-      await createSpreadsheetInFolder(token, title, headers, rows);
+      // Primary key: column 0 (id), secondary: column 5 (membershipCardNo)
+      const res = await syncSpreadsheetInPlace(token, canonicalTitle, headers, rows, 0, 5);
+
+      // If new records exist in sheet (e.g. entered directly from Google Sheets), pull them into local app state
+      if (res.mergedRows && res.mergedRows.length > members.length && onImportMembers) {
+        const updatedMembers = res.mergedRows.map((r, idx) => ({
+          id: r[0] || `mem-synced-${idx}`,
+          fullName: r[1] || 'منخرط',
+          gender: r[2] || 'ذكر',
+          nationalId: r[3] || '',
+          socialSecurityNo: r[4] || '',
+          membershipCardNo: r[5] || `SNTE-${idx + 1}`,
+          wilayaName: r[6] || 'الجزائر',
+          municipalName: r[7] || '',
+          institutionName: r[8] || '',
+          tier: r[9] || 'التعليم المتوسط',
+          jobPosition: r[10] || 'أستاذ',
+          unionRole: r[11] || 'عضو منخرط',
+          phone: r[12] || '',
+          email: r[13] || '',
+          duesStatus: r[14] || 'مدفوع',
+          joinDate: r[15] || dateStr
+        }));
+        onImportMembers(updatedMembers);
+      }
+
       setStatusMessage({
         type: 'success',
-        text: `تم حفظ ${members.length} منخرط بنجاح في Google Sheets داخل المجلد المحدد!`
+        text: `✅ تمت مزامنة قاعدة المنخرطين في نفس الشيت بنجاح! الإجمالي: ${res.totalCount} منخرط (تم حفظ ${res.existingCount} سابق ودمج ${res.addedCount} جديد بأمان تام).`
       });
       await loadFolderFiles(token);
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: `فشل الحفظ: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `فشل مزامنة المنخرطين: ${err.message}` });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 3. Export Minutes
+  // 3. In-Place Sync Minutes (سجل المحاضر في نفس الشيت)
   const handleExportMinutes = async () => {
     if (!token) return;
     setIsLoading(true);
-    setStatusMessage({ type: 'info', text: 'جاري إنشاء جدول بيانات المحاضر الرسمية في Google Sheets...' });
+    setStatusMessage({ type: 'info', text: 'جاري مزامنة سجل المحاضر الرسمية في نفس الشيت مع الحفاظ على كافة المحاضر...' });
     try {
-      const dateStr = new Date().toISOString().split('T')[0];
-      const title = `سجل محاضر التنصيب والجمعيات العامة - SNTE - ${dateStr}`;
+      const canonicalTitle = 'سجل محاضر التنصيب والجمعيات العامة - SNTE الموحد';
       const headers = [
         'معرف المحضر',
         'رقم المحضر الرسمي',
@@ -265,27 +309,26 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         m.driveUrl || ''
       ]);
 
-      await createSpreadsheetInFolder(token, title, headers, rows);
+      const res = await syncSpreadsheetInPlace(token, canonicalTitle, headers, rows, 0, 1);
       setStatusMessage({
         type: 'success',
-        text: `تم حفظ ${minutes.length} محضر رسمي بنجاح في Google Sheets!`
+        text: `✅ تمت مزامنة سجل المحاضر في نفس الشيت بنجاح! الإجمالي: ${res.totalCount} محضر (تم الحفاظ على ${res.existingCount} ومزامنة ${res.addedCount} جديد).`
       });
       await loadFolderFiles(token);
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: `فشل الحفظ: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `فشل مزامنة المحاضر: ${err.message}` });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 4. Export Accounts & Wilayas
+  // 4. In-Place Sync Accounts (دليل الهياكل والأمانات الـ 72 في نفس الشيت)
   const handleExportAccounts = async () => {
     if (!token) return;
     setIsLoading(true);
-    setStatusMessage({ type: 'info', text: 'جاري تصدير دليل الهياكل الولائية والأمانات في Google Sheets...' });
+    setStatusMessage({ type: 'info', text: 'جاري مزامنة دليل الهياكل والأمانات الـ 72 في نفس الشيت...' });
     try {
-      const dateStr = new Date().toISOString().split('T')[0];
-      const title = `دليل الهياكل النقابية والأمانات الولائية والبلدية - SNTE - ${dateStr}`;
+      const canonicalTitle = 'دليل الهياكل النقابية والأمانات الـ 72 - SNTE الموحد';
       const headers = [
         'معرف الهيكل',
         'اسم الهيكل النقابي المؤسساتي',
@@ -320,27 +363,26 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         a.status || 'نشط'
       ]);
 
-      await createSpreadsheetInFolder(token, title, headers, rows);
+      const res = await syncSpreadsheetInPlace(token, canonicalTitle, headers, rows, 0, 3);
       setStatusMessage({
         type: 'success',
-        text: `تم حفظ دليل ${accounts.length} هيكل نقابي بنجاح في Google Sheets!`
+        text: `✅ تمت مزامنة دليل الهياكل في نفس الشيت بنجاح! الإجمالي: ${res.totalCount} هيكل نقابي محفوظ ومحدث بدون تكرار.`
       });
       await loadFolderFiles(token);
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: `فشل الحفظ: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `فشل مزامنة الهياكل: ${err.message}` });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 5. Export Grievances
+  // 5. In-Place Sync Grievances (سجل النزاعات والعرائض في نفس الشيت)
   const handleExportGrievances = async () => {
     if (!token) return;
     setIsLoading(true);
-    setStatusMessage({ type: 'info', text: 'جاري إنشاء جدول سجل النزاعات في Google Sheets...' });
+    setStatusMessage({ type: 'info', text: 'جاري مزامنة سجل النزاعات في نفس الشيت مع الحفاظ على كل الملفات...' });
     try {
-      const dateStr = new Date().toISOString().split('T')[0];
-      const title = `سجل النزاعات والعرائض والانشغالات المهنية - SNTE - ${dateStr}`;
+      const canonicalTitle = 'سجل النزاعات والعرائض والانشغالات المهنية - SNTE الموحد';
       const headers = [
         'معرف النزاع',
         'رقم الملف',
@@ -373,32 +415,30 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         g.actionTaken || ''
       ]);
 
-      await createSpreadsheetInFolder(token, title, headers, rows);
+      const res = await syncSpreadsheetInPlace(token, canonicalTitle, headers, rows, 0, 1);
       setStatusMessage({
         type: 'success',
-        text: `تم حفظ ${grievances.length} ملف نزاع وعريضة بنجاح في Google Sheets!`
+        text: `✅ تمت مزامنة سجل النزاعات في نفس الشيت بنجاح! الإجمالي: ${res.totalCount} ملف وعريضة محفوظة ومحدثة دون فقدان.`
       });
       await loadFolderFiles(token);
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: `فشل الحفظ: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `فشل مزامنة النزاعات: ${err.message}` });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 6. Master One-Click Sync All (رفع كل قواعد البيانات الشاملة دفعة واحدة)
+  // 6. Master One-Click In-Place Sync All (مزامنة كل قواعد البيانات في نفس شيتاتها الثابتة دفعة واحدة)
   const handleUploadAllToDriveFolder = async () => {
     if (!token) return;
     setIsLoading(true);
-    setUploadProgress('1/6: رفع حزمة التثبيت المستقلة الشاملة (JSON)...');
+    setUploadProgress('1/6: تحديث حزمة التثبيت الشاملة في الفولدر (JSON)...');
     try {
-      const dateStr = new Date().toISOString().split('T')[0];
-
-      // Step 1: Upload Master JSON Package
+      // Step 1: Upload or update Master JSON Package in-place
       const masterPackage = {
         app: 'SNTE Digital Portal',
-        exportedAt: new Date().toISOString(),
-        version: '3.0.0',
+        lastSynchronizedAt: new Date().toISOString(),
+        version: '3.5.0',
         folderId: TARGET_FOLDER_ID,
         membersCount: members.length,
         minutesCount: minutes.length,
@@ -417,35 +457,35 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
         }
       };
 
-      await uploadJsonToFolder(token, `snte_complete_database_package_${dateStr}.json`, masterPackage);
+      await uploadOrUpdateJsonInFolder(token, 'snte_complete_database_package.json', masterPackage);
 
-      // Step 2: Financial Sheet
-      setUploadProgress('2/6: إنشاء شيت الملف المالي والاشتراكات (50%/50%)...');
+      // Step 2: Financial Sheet In-Place
+      setUploadProgress('2/6: مزامنة شيت الملف المالي والاشتراكات (50%/50%) في نفس الشيت...');
       await handleExportFinances();
 
-      // Step 3: Members Sheet
-      setUploadProgress('3/6: إنشاء شيت قاعدة بيانات المنخرطين...');
+      // Step 3: Members Sheet In-Place
+      setUploadProgress('3/6: مزامنة شيت قاعدة بيانات المنخرطين في نفس الشيت المعتمد...');
       await handleExportMembers();
 
-      // Step 4: Minutes Sheet
-      setUploadProgress('4/6: إنشاء شيت سجل المحاضر الرسمية...');
+      // Step 4: Minutes Sheet In-Place
+      setUploadProgress('4/6: مزامنة شيت سجل المحاضر الرسمية في نفس الشيت...');
       await handleExportMinutes();
 
-      // Step 5: Secretariats Sheet
-      setUploadProgress('5/6: إنشاء شيت دليل الهياكل والأمانات الـ 72...');
+      // Step 5: Secretariats Sheet In-Place
+      setUploadProgress('5/6: مزامنة شيت دليل الهياكل والأمانات الـ 72 في نفس الشيت...');
       await handleExportAccounts();
 
-      // Step 6: Grievances Sheet
-      setUploadProgress('6/6: إنشاء شيت النزاعات والعرائض المهنية...');
+      // Step 6: Grievances Sheet In-Place
+      setUploadProgress('6/6: مزامنة شيت النزاعات والعرائض المهنية في نفس الشيت...');
       await handleExportGrievances();
 
       setStatusMessage({
         type: 'success',
-        text: `🎉 تم بنجاح رفع وتحديث كافة قواعد البيانات الـ 6 وحزمة التثبيت الشاملة في الفولدر! موقعك الآن جاهز للتنصيب الفوري على أي استضافة أو صفحة.`
+        text: `🎉 تمت بنجاح المزامنة التراكمية لكافة الجداول الـ 6 في نفس الشيتات داخل المجلد المعتمد دون إنشاء ملفات مكررة، مع الحفاظ التام على السجلات القديمة والجديدة!`
       });
       await loadFolderFiles(token);
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: `فشل الرفع الشامل: ${err.message}` });
+      setStatusMessage({ type: 'error', text: `فشلت المزامنة الشاملة: ${err.message}` });
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
@@ -587,11 +627,11 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-black bg-amber-400 text-black px-2.5 py-0.5 rounded-full uppercase">
-                  ربط وتثبيت قواعد البيانات الشاملة
+                  مزامنة شيتات Google Sheets الخارجية
                 </span>
-                <span className="text-xs text-emerald-200 font-bold">Google Sheets & Drive</span>
+                <span className="text-xs text-emerald-200 font-bold">مفصول عن تخزين الاستضافة المحلي</span>
               </div>
-              <h3 className="text-lg font-black mt-0.5">منظومة رفع واستيراد كافة قواعد بيانات SNTE لتسهيل التنصيب على أي استضافة</h3>
+              <h3 className="text-lg font-black mt-0.5">منظومة المزامنة اللحظية مع جداول بيانات قوقل شيت المعتمدة (Google Drive & Sheets)</h3>
             </div>
           </div>
           <button
@@ -710,11 +750,11 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
           <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black shadow-lg border-2 border-amber-600/30 flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[10px] font-black bg-black text-amber-300 px-2.5 py-0.5 rounded-full uppercase">
-                الرفع والتثبيت السريع
+                المزامنة التراكمية الذكية
               </span>
-              <h4 className="text-base font-black">🚀 رفع كافة قواعد البيانات إلى الفولدر بنقرة واحدة (Full Master Sync)</h4>
+              <h4 className="text-base font-black">🔄 مزامنة كافة قواعد البيانات في نفس الشيتات (Smart In-Place Sync)</h4>
               <p className="text-xs font-bold text-amber-950">
-                يشمل: الملف المالي (50-50)، المنخرطين، المحاضر، الهياكل الـ 72، النزاعات، وحزمة التثبيت المستقلة (JSON).
+                تحديث الجداول الثابتة نفسها في الفولدر مع الحفاظ الكامل على كافة السجلات القديمة وإضافة السجلات الجديدة دون تكرار أو حذف.
               </p>
               {uploadProgress && (
                 <div className="p-2 bg-black/80 text-amber-300 rounded-xl font-mono text-[11px] animate-pulse">
@@ -728,8 +768,8 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
               disabled={!token || isLoading}
               className="px-6 py-3 bg-[#004d26] hover:bg-[#003d1e] disabled:bg-gray-400 text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl flex items-center gap-2 transition-all cursor-pointer border border-emerald-400/40 transform hover:scale-[1.02]"
             >
-              <span>بدء الرفع الشامل لكل القواعد</span>
-              <span>⚡</span>
+              <span>مزامنة كافة الشيتات معاً</span>
+              <span>🔄</span>
             </button>
           </div>
 
@@ -741,7 +781,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
                 activeTab === 'all' ? 'bg-[#006633] text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              📊 كل قواعد البيانات المتاحة (6)
+              📊 مزامنة الشيتات الـ 6 (في نفس الملفات)
             </button>
             <button
               onClick={() => setActiveTab('import')}
@@ -765,7 +805,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
           {activeTab === 'all' && (
             <div className="space-y-4">
               <p className="text-gray-600 font-medium">
-                يمكنك أيضاً إنشاء وتحديث أي قاعدة بيانات منفردة كشيت Google Sheets داخل المجلد:
+                يتم تحديث الشيت نفسه داخل الفولدر المعتمد دون إنشاء شيتات مكررة، مع الحفاظ التام على السجلات القديمة:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -788,7 +828,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
                     disabled={!token || isLoading}
                     className="w-full py-2.5 px-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 text-black font-black rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   >
-                    <span>إنشاء شيت الملف المالي</span>
+                    <span>مزامنة شيت المالية (في نفس الملف)</span>
                     <span>💵</span>
                   </button>
                 </div>
@@ -809,7 +849,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
                     disabled={!token || isLoading}
                     className="w-full py-2.5 px-3 bg-[#006633] hover:bg-[#004d26] disabled:bg-gray-300 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   >
-                    <span>إنشاء شيت المنخرطين</span>
+                    <span>مزامنة شيت المنخرطين (في نفس الملف)</span>
                     <span>📊</span>
                   </button>
                 </div>
@@ -830,7 +870,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
                     disabled={!token || isLoading}
                     className="w-full py-2.5 px-3 bg-[#006633] hover:bg-[#004d26] disabled:bg-gray-300 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   >
-                    <span>إنشاء شيت المحاضر</span>
+                    <span>مزامنة شيت المحاضر (في نفس الملف)</span>
                     <span>📑</span>
                   </button>
                 </div>
@@ -851,7 +891,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
                     disabled={!token || isLoading}
                     className="w-full py-2.5 px-3 bg-[#006633] hover:bg-[#004d26] disabled:bg-gray-300 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   >
-                    <span>إنشاء شيت الهياكل</span>
+                    <span>مزامنة شيت الهياكل (في نفس الملف)</span>
                     <span>🏛️</span>
                   </button>
                 </div>
@@ -872,7 +912,7 @@ export const GoogleDriveSheetsSyncModal: React.FC<GoogleDriveSheetsSyncProps> = 
                     disabled={!token || isLoading}
                     className="w-full py-2.5 px-3 bg-[#006633] hover:bg-[#004d26] disabled:bg-gray-300 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   >
-                    <span>إنشاء شيت النزاعات</span>
+                    <span>مزامنة شيت النزاعات (في نفس الملف)</span>
                     <span>⚖️</span>
                   </button>
                 </div>

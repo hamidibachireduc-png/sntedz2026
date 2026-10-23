@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WILAYAS_LIST, WilayaData } from './wilayasList';
 import { MemberData } from './DigitalMembershipCardModal';
+import { getAllMembersWithSeed } from './membershipStatusData';
 
 interface PendingMembersReviewModalProps {
   isOpen: boolean;
@@ -32,8 +33,7 @@ export const PendingMembersReviewModal: React.FC<PendingMembersReviewModalProps>
 
   const loadMembers = () => {
     try {
-      const raw = localStorage.getItem('snte_members_v3');
-      const all: any[] = raw ? JSON.parse(raw) : [];
+      const all = getAllMembersWithSeed();
       setMembers(all);
     } catch {
       setMembers([]);

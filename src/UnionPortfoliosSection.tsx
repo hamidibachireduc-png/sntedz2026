@@ -252,7 +252,7 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
           const found = all.find((t) => t.id === tId);
           if (found) {
             setSelectedTopicDetails(found);
-            if (found.category === 'wilaya_acts' || found.category === 'region_acts') {
+            if (found.category === 'national_acts' || found.category === 'wilaya_acts' || found.category === 'region_acts') {
               setSelectedActivityCategory(found.category);
             } else {
               setSelectedMemberCategory(found.category);
@@ -271,7 +271,7 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
     const handleSwitchCategory = (e: any) => {
       const cat = e.detail?.category as TopicCategory;
       if (!cat) return;
-      if (cat === 'wilaya_acts' || cat === 'region_acts') {
+      if (cat === 'national_acts' || cat === 'wilaya_acts' || cat === 'region_acts') {
         setSelectedActivityCategory(cat);
         const elem = document.getElementById('unionActivitiesSection');
         if (elem) elem.scrollIntoView({ behavior: 'smooth' });
@@ -285,7 +285,7 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
     const handleOpenAddTopic = (e: any) => {
       const cat = (e.detail?.category as TopicCategory) || 'union_bag';
       setActiveCategoryForAdd(cat);
-      if (cat === 'wilaya_acts' || cat === 'region_acts') {
+      if (cat === 'national_acts' || cat === 'wilaya_acts' || cat === 'region_acts') {
         setSelectedActivityCategory(cat);
       } else {
         setSelectedMemberCategory(cat);
@@ -327,7 +327,7 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
 
   const handleTopicSaved = (newTopic: UnionTopic) => {
     loadTopics();
-    if (newTopic.category === 'wilaya_acts' || newTopic.category === 'region_acts') {
+    if (newTopic.category === 'national_acts' || newTopic.category === 'wilaya_acts' || newTopic.category === 'region_acts') {
       setSelectedActivityCategory(newTopic.category);
     } else {
       setSelectedMemberCategory(newTopic.category);
@@ -362,8 +362,8 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
 
   // Member categories list (Platforms & Bags)
   const MEMBER_CATEGORIES: TopicCategory[] = ['platforms', 'union_bag', 'legal_bag', 'edu_bag'];
-  // Activities categories list
-  const ACTIVITY_CATEGORIES: TopicCategory[] = ['wilaya_acts', 'region_acts'];
+  // Activities categories list (النشاط الوطني، الأمانات الولائية، والتنسيقيات الجهوية)
+  const ACTIVITY_CATEGORIES: TopicCategory[] = ['national_acts', 'wilaya_acts', 'region_acts'];
 
   // Filter topics for Member Services
   const filteredMemberTopics = topics.filter((t) => {
@@ -706,13 +706,13 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
         <div className="text-center max-w-3xl mx-auto mb-6">
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-[#006633] px-3.5 py-1 rounded-full text-xs font-black mb-2 shadow-xs border border-emerald-300">
             <span>🏛️</span>
-            <span>تغطية ميدانية وإعلامية وطنية شاملة</span>
+            <span>تغطية مركزية وميدانية شاملة</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            النشاطات النقابية الميدانية (الأمانات الولائية الـ 72 والتنسيقيات)
+            النشاطات النقابية (النشاط الوطني، الأمانات الولائية الـ 72 والتنسيقيات)
           </h2>
           <p className="text-xs sm:text-sm text-gray-600 mt-2">
-            متابعة حية وتقارير رسمية لنشاطات ولقاءات الأمانات الولائية والتنسيقيات الجهوية المعتمدة، متاحة لجميع الزوار والمنخرطين.
+            متابعة حية وتقارير رسمية لنشاطات الأمانة العامة الوطنية، الأمانات الولائية الـ 72، والتنسيقيات الجهوية المعتمدة، متاحة لجميع الزوار والمنخرطين.
           </p>
         </div>
 
@@ -837,7 +837,7 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
                 type="text"
                 value={activitySearchQuery}
                 onChange={(e) => setActivitySearchQuery(e.target.value)}
-                placeholder="بحث في نشاطات الولايات والتنسيقيات..."
+                placeholder="بحث في النشاطات الوطنية، نشاطات الولايات والتنسيقيات..."
                 className="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#006633]"
               />
               <span className="absolute right-2.5 top-2.5 text-gray-400 text-xs">🔍</span>
