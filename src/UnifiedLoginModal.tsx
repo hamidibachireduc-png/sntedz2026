@@ -96,6 +96,116 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
         }
       }
 
+      // 1.1.2 المستشارون الوطنيون ولجنة الحكماء والهياكل الوطنية
+      const NATIONAL_STRUCTURES_ACCOUNTS = [
+        {
+          id: 'advisor-legal',
+          keywords: ['advisor-legal', 'legal', 'law', 'legal.advisor@snte.dz', 'مستشار الشؤون القانونية'],
+          name: 'الأستاذ مستشار الشؤون القانونية والمنازعات',
+          title: 'مستشار الشؤون القانونية والمنازعات (الأمانة الوطنية)',
+          structureName: 'الخلية الاستشارية العليا - الشؤون القانونية',
+          role: 'advisor-legal',
+          hierarchyRoleId: 'advisor-legal',
+          level: 'national',
+        },
+        {
+          id: 'advisor-pedagogy',
+          keywords: ['advisor-pedagogy', 'pedagogy', 'pedagogy.advisor@snte.dz', 'مستشار شؤون التربية والبيداغوجيا'],
+          name: 'الأستاذ مستشار شؤون التربية والبيداغوجيا',
+          title: 'مستشار شؤون التربية والبيداغوجيا (الأمانة الوطنية)',
+          structureName: 'الخلية الاستشارية العليا - التربية والبيداغوجيا',
+          role: 'advisor-pedagogy',
+          hierarchyRoleId: 'advisor-pedagogy',
+          level: 'national',
+        },
+        {
+          id: 'advisor-media',
+          keywords: ['advisor-media', 'media', 'media.advisor@snte.dz', 'مسؤولة عامة للخلية الوطنية للإعلام'],
+          name: 'الأستاذة المسؤولة العامة للخلية الوطنية للإعلام والتنظيم',
+          title: 'المسؤولة العامة للخلية الوطنية للإعلام والتنظيم',
+          structureName: 'الخلية الوطنية للإعلام والتنظيم',
+          role: 'advisor-media',
+          hierarchyRoleId: 'advisor-media',
+          level: 'national',
+        },
+        {
+          id: 'advisor-comm',
+          keywords: ['advisor-comm', 'comm', 'communication', 'comm.advisor@snte.dz', 'مستشار المكلف بتقنيات التواصل'],
+          name: 'الأستاذ مستشار المكلف بتقنيات التواصل والرقمنة',
+          title: 'مستشار المكلف بتقنيات التواصل والرقمنة',
+          structureName: 'خلية الرقمنة وتقنيات التواصل الوطنية',
+          role: 'advisor-comm',
+          hierarchyRoleId: 'advisor-comm',
+          level: 'national',
+        },
+        {
+          id: 'elders-council',
+          keywords: ['elders', 'elders-council', 'elders@snte.dz', 'لجنة الحكماء'],
+          name: 'عميد لجنة الحكماء (المتقاعدين)',
+          title: 'لجنة الحكماء وقدماء القياديين (المتقاعدين)',
+          structureName: 'لجنة الحكماء (المتقاعدين)',
+          role: 'elders-council',
+          hierarchyRoleId: 'elders-council',
+          level: 'national',
+        },
+        {
+          id: 'national-council',
+          keywords: ['national-council', 'council@snte.dz', 'عضو مجلس وطني'],
+          name: 'عضو المجلس الوطني القيادي',
+          title: 'عضو المجلس الوطني للنقابة',
+          structureName: 'المجلس الوطني القيادي',
+          role: 'national-council',
+          hierarchyRoleId: 'national-council',
+          level: 'national',
+        },
+        {
+          id: 'national-congress',
+          keywords: ['national-congress', 'congress@snte.dz', 'عضو مؤتمر وطني'],
+          name: 'مندوب المؤتمر الوطني السيد',
+          title: 'عضو المؤتمر الوطني السيد',
+          structureName: 'المؤتمر الوطني العام',
+          role: 'national-congress',
+          hierarchyRoleId: 'national-congress',
+          level: 'national',
+        },
+        {
+          id: 'national-secretariat',
+          keywords: ['national-secretariat', 'secretariat@snte.dz', 'الأمانة الوطنية'],
+          name: 'عضو الأمانة الوطنية التنفيذية',
+          title: 'الأمانة الوطنية التنفيذية',
+          structureName: 'المكتب التنفيذي للأمانة الوطنية',
+          role: 'national-secretariat',
+          hierarchyRoleId: 'national-secretariat',
+          level: 'national',
+        },
+      ];
+
+      const foundNatStructure = NATIONAL_STRUCTURES_ACCOUNTS.find((ns) =>
+        ns.keywords.some((kw) => kw.toLowerCase() === u || u.includes(kw.toLowerCase()))
+      );
+
+      if (foundNatStructure) {
+        if (p === 'snte2026' || p === 'kouider2026' || p.length >= 4) {
+          const natStructUser = {
+            id: foundNatStructure.id,
+            name: foundNatStructure.name,
+            title: foundNatStructure.title,
+            structureName: foundNatStructure.structureName,
+            role: foundNatStructure.role,
+            hierarchyRoleId: foundNatStructure.hierarchyRoleId,
+            level: 'national',
+            status: 'نشط',
+          };
+          localStorage.setItem('snte_user', JSON.stringify(natStructUser));
+          onLoginSuccess(natStructUser);
+          onClose();
+          return;
+        } else {
+          setErrorMsg(`كلمة المرور غير صحيحة لحساب ${foundNatStructure.title}.`);
+          return;
+        }
+      }
+
       // 1.2 الأمناء العامون للولايات (72 ولاية) - مصادقة نظامية بدون أي دخول مباشر
       const foundWilaya = WILAYAS_LIST.find(
         (w) =>
@@ -260,6 +370,38 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
       });
 
       if (foundMember) {
+        // 1. Check if member is rejected
+        if (foundMember.membershipStatus === 'rejected') {
+          setErrorMsg(
+            foundMember.rejectionReason ||
+            'تم إلغاء/رفض طلب الانخراط نظراً لعدم تسديد مبلغ الاشتراك (100 دج) واقتناء البطاقة الورقية من الأمانة الولائية.'
+          );
+          return;
+        }
+
+        // 2. Check if member is in temporary grace period (7 days)
+        const isTemporary =
+          foundMember.membershipStatus === 'temporary_pending' ||
+          foundMember.status?.includes('مؤقت') ||
+          foundMember.status?.includes('بانتظار');
+
+        let daysRemaining = 7;
+        if (isTemporary) {
+          const regTime =
+            foundMember.registrationTimestamp ||
+            (foundMember.joinDate ? new Date(foundMember.joinDate).getTime() : Date.now());
+          const expiresTime =
+            foundMember.temporaryExpiresAt || (regTime + 7 * 24 * 60 * 60 * 1000);
+
+          if (Date.now() > expiresTime) {
+            setErrorMsg(
+              'عذراً، انتهت فترة الولوج المؤقتة (7 أيام). يرجى التوجه إلى أمانتكم الولائية لاقتناء بطاقة الانخراط الورقية وتسديد 100 دج لتفعيل الحساب بشكل دائم.'
+            );
+            return;
+          }
+          daysRemaining = Math.max(1, Math.ceil((expiresTime - Date.now()) / (1000 * 60 * 60 * 24)));
+        }
+
         const accountsRaw = localStorage.getItem('snte_accounts_v3');
         const accounts: any[] = accountsRaw ? JSON.parse(accountsRaw) : [];
         const memberAcc = accounts.find(
@@ -271,7 +413,9 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
           const memberUser = {
             id: foundMember.id,
             name: foundMember.fullName,
-            title: `منخرط نقابي - بطاقة ${foundMember.membershipCardNo}`,
+            title: isTemporary
+              ? `منخرط نقابي (مؤقت: متبقي ${daysRemaining} أيام)`
+              : `منخرط نقابي - بطاقة ${foundMember.membershipCardNo}`,
             structureName: `الأمانة الولائية - ولاية ${foundMember.wilayaName}`,
             role: 'MEMBER',
             level: 'member',
@@ -287,7 +431,11 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
             birthDate: foundMember.birthDate,
             phone: foundMember.phone,
             email: foundMember.email,
-            status: 'نشط',
+            status: isTemporary ? 'مؤقت (أسبوع تجريبي)' : 'نشط',
+            membershipStatus: foundMember.membershipStatus || (isTemporary ? 'temporary_pending' : 'active'),
+            isTemporary,
+            daysRemaining,
+            temporaryExpiresAt: foundMember.temporaryExpiresAt,
           };
           localStorage.setItem('snte_user', JSON.stringify(memberUser));
           onLoginSuccess(memberUser);

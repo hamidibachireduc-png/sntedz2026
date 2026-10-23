@@ -300,39 +300,101 @@ export const AddTopicModal: React.FC<AddTopicModalProps> = ({
                   type="text"
                   value={actionText}
                   onChange={(e) => setActionText(e.target.value)}
-                  placeholder="مثال: تحميل PDF / استعراض الوثيقة..."
+                  placeholder="مثال: 🚀 تشغيل تطبيق الويب (HTML) / استعراض..."
                   className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#006633]"
                 />
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <span className="text-[10px] text-gray-400">نماذج سريعة:</span>
+                  <button
+                    type="button"
+                    onClick={() => setActionText('🚀 تشغيل تطبيق الويب (HTML)')}
+                    className="text-[10px] bg-emerald-50 hover:bg-emerald-100 text-[#006633] px-2 py-0.5 rounded border border-emerald-200 cursor-pointer"
+                  >
+                    🚀 تشغيل تطبيق HTML
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActionText('🌐 فتح المنصة الرقمية')}
+                    className="text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200 cursor-pointer"
+                  >
+                    🌐 فتح المنصة
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActionText('📄 استعراض الوثيقة والمحتوى')}
+                    className="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-0.5 rounded border border-gray-200 cursor-pointer"
+                  >
+                    📄 استعراض
+                  </button>
+                </div>
               </div>
             )}
           </div>
 
-          {/* File Link / URL */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                رابط الملف أو مجلد Google Drive (اختياري)
-              </label>
-              <input
-                type="url"
-                value={fileUrl}
-                onChange={(e) => setFileUrl(e.target.value)}
-                placeholder="https://drive.google.com/... أو رابط PDF"
-                className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-[#006633]"
-              />
+          {/* HTML Web Apps & Google Drive Links Section */}
+          <div className="bg-gradient-to-r from-blue-50/60 via-emerald-50/40 to-amber-50/40 p-3.5 rounded-2xl border border-blue-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🚀</span>
+                <span className="text-xs font-black text-gray-900">
+                  ربط صفحات الويب وتطبيقات HTML المبرمجة من Google Drive أو الروابط الخارجية
+                </span>
+              </div>
+              <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">
+                الحقائب والمنصات الرقمية
+              </span>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                رابط المنصة أو الموقع الخارجي (اختياري)
-              </label>
-              <input
-                type="text"
-                value={externalUrl}
-                onChange={(e) => setExternalUrl(e.target.value)}
-                placeholder="https://... أو #قسم_محدد"
-                className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-[#006633]"
-              />
+            <p className="text-[11px] text-gray-600 leading-relaxed">
+              إذا قمت ببرمجة صفحات HTML ووضعتها في فولدر Google Drive كروابط لتطبيقات رقمية، يمكنك إلصاق رابط المشاركة أو رابط المعاينة أدناه ليتم تشغيل التطبيق مباشرة للمنخرطين.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  رابط الملف أو مجلد Google Drive (اختياري)
+                </label>
+                <input
+                  type="url"
+                  value={fileUrl}
+                  onChange={(e) => setFileUrl(e.target.value)}
+                  placeholder="https://drive.google.com/... أو رابط PDF"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-[#006633]"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    رابط تطبيق الويب HTML أو المنصة الخارجية
+                  </label>
+                  {externalUrl && (
+                    <a
+                      href={externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-blue-600 hover:underline font-bold flex items-center gap-0.5"
+                    >
+                      <span>تجربة الرابط</span>
+                      <span>↗</span>
+                    </a>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={externalUrl}
+                  onChange={(e) => {
+                    setExternalUrl(e.target.value);
+                    if (e.target.value.includes('.html') || e.target.value.includes('drive.google.com')) {
+                      if (!actionText || actionText === 'تحميل / استعراض الوثيقة') {
+                        setActionText('🚀 تشغيل تطبيق الويب (HTML)');
+                      }
+                    }
+                  }}
+                  placeholder="https://... رابط صفحة HTML أو منصة رقمية"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-[#006633]"
+                />
+              </div>
             </div>
           </div>
 

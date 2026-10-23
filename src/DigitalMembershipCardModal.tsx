@@ -19,6 +19,16 @@ export interface MemberData {
   joinDate?: string;
   status?: string;
   avatarUrl?: string;
+  hierarchyRole?: string; // الصفة في السلم النقابي
+  hierarchyLevel?: string; // المستوى في السلم النقابي
+  // Temporary grace period & activation fields
+  membershipStatus?: 'temporary_pending' | 'active' | 'rejected';
+  registrationTimestamp?: number;
+  temporaryExpiresAt?: number;
+  duesPaid?: boolean;
+  activatedBy?: string;
+  activatedAt?: string;
+  rejectionReason?: string;
 }
 
 interface DigitalMembershipCardModalProps {
@@ -174,6 +184,10 @@ export const DigitalMembershipCardModal: React.FC<DigitalMembershipCardModalProp
             <tr>
               <td class="label">الولاية والبلدية:</td>
               <td class="val">${member.wilayaName} (${member.wilayaCode}) - بلدية ${member.municipalName}</td>
+            </tr>
+            <tr>
+              <td class="label">الهيكل والسلم النقابي:</td>
+              <td class="val" style="color: #004d26; font-weight: 900;">${member.hierarchyRole || 'منخرط'}</td>
             </tr>
             <tr>
               <td class="label">حالة الانخراط:</td>
@@ -348,13 +362,30 @@ export const DigitalMembershipCardModal: React.FC<DigitalMembershipCardModalProp
                     {member.institutionName} - {member.workplace || member.municipalName}
                   </span>
                 </div>
+
+                <div className="pt-0.5">
+                  <span className="text-[10px] text-emerald-200 font-bold block">الهيكل والسلم النقابي:</span>
+                  <span className="font-black text-amber-300 text-[11px] bg-black/40 px-2 py-0.5 rounded border border-amber-400/40 inline-flex items-center gap-1">
+                    <span>🏛️</span>
+                    <span>{member.hierarchyRole || 'منخرط'}</span>
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Card Footer: National SG Stamp & Security Band */}
             <div className="relative z-10 border-t border-amber-400/30 mt-3 pt-2.5 flex items-center justify-between text-[10px]">
               <div>
-                <span className="text-gray-300 block">صفة الحساب: <strong className="text-emerald-300">منخرط نظامي نشط</strong></span>
+                <span className="text-gray-300 block">
+                  صفة الحساب:{' '}
+                  {member.membershipStatus === 'temporary_pending' || member.status?.includes('مؤقت') ? (
+                    <strong className="text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-400/40 text-[9px]">
+                      ⏳ عضوية مؤقتة (قيد اقتناء البطاقة الورقية من الأمانة الولائية)
+                    </strong>
+                  ) : (
+                    <strong className="text-emerald-300">منخرط نظامي نشط (اشتراك مسدد)</strong>
+                  )}
+                </span>
                 <span className="text-amber-200/90 text-[9px] block">رقم البطاقة وطني موحد غير مقيد بالتقسيم الإقليمي</span>
               </div>
               <div className="flex items-center gap-2">

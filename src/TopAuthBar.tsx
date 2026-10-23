@@ -5,6 +5,9 @@ import { DigitalMembershipCardModal, MemberData } from './DigitalMembershipCardM
 import { AddTopicModal } from './AddTopicModal';
 import { RequestPublicationModal } from './RequestPublicationModal';
 import { PublicationRequestsReviewModal } from './PublicationRequestsReviewModal';
+import { PendingMembersReviewModal } from './PendingMembersReviewModal';
+import { UnionHierarchyModal } from './UnionHierarchyModal';
+import { WILAYAS_LIST, WilayaData } from './wilayasList';
 import {
   TopicCategory,
   CATEGORY_INFO,
@@ -21,10 +24,13 @@ export const TopAuthBar: React.FC = () => {
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isPendingMembersOpen, setIsPendingMembersOpen] = useState(false);
+  const [isHierarchyOpen, setIsHierarchyOpen] = useState(false);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
   const [isPortfoliosDropdownOpen, setIsPortfoliosDropdownOpen] = useState(false);
   const [activeMemberData, setActiveMemberData] = useState<MemberData | null>(null);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [pendingMembersCount, setPendingMembersCount] = useState(0);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +61,39 @@ export const TopAuthBar: React.FC = () => {
     }
   };
 
+  const loadPendingMembersCount = () => {
+    try {
+      const raw = localStorage.getItem('snte_members_v3');
+      if (!raw) {
+        setPendingMembersCount(0);
+        return;
+      }
+      const all: any[] = JSON.parse(raw);
+      if (!Array.isArray(all)) {
+        setPendingMembersCount(0);
+        return;
+      }
+      if (isNationalSG) {
+        const count = all.filter(
+          (m) => m.membershipStatus === 'temporary_pending' || (!m.membershipStatus && !m.duesPaid)
+        ).length;
+        setPendingMembersCount(count);
+      } else if (currentUser?.role === 'WILAYA_SG' && currentUser?.wilayaCode) {
+        const cCode = String(currentUser.wilayaCode).padStart(2, '0');
+        const count = all.filter(
+          (m) =>
+            String(m.wilayaCode).padStart(2, '0') === cCode &&
+            (m.membershipStatus === 'temporary_pending' || (!m.membershipStatus && !m.duesPaid))
+        ).length;
+        setPendingMembersCount(count);
+      } else {
+        setPendingMembersCount(0);
+      }
+    } catch {
+      setPendingMembersCount(0);
+    }
+  };
+
   // Sync user state from localStorage
   const refreshUser = () => {
     try {
@@ -78,7 +117,12 @@ export const TopAuthBar: React.FC = () => {
             institutionName: u.institutionName || 'مؤسسة تربوية',
             rank: u.rank || 'أستاذ',
             workplace: u.workplace || 'المؤسسة',
-            status: 'نشط',
+            status: u.membershipStatus === 'temporary_pending' ? 'مؤقت (أسبوع تجريبي)' : (u.status || 'نشط'),
+            membershipStatus: u.membershipStatus,
+            registrationTimestamp: u.registrationTimestamp,
+            temporaryExpiresAt: u.temporaryExpiresAt,
+            duesPaid: u.duesPaid,
+            rejectionReason: u.rejectionReason,
           });
         }
       } else {
@@ -93,6 +137,7 @@ export const TopAuthBar: React.FC = () => {
   useEffect(() => {
     refreshUser();
     loadRequestsCount();
+    loadPendingMembersCount();
 
     // Listen to external open requests from anywhere in the app
     const handleOpenLogin = () => setIsLoginOpen(true);
@@ -101,19 +146,34 @@ export const TopAuthBar: React.FC = () => {
       refreshUser();
       setIsCardOpen(true);
     };
+    const handleOpenPendingMembers = () => setIsPendingMembersOpen(true);
+    const handleOpenHierarchy = () => setIsHierarchyOpen(true);
 
     window.addEventListener('snte-open-login', handleOpenLogin);
     window.addEventListener('snte-open-register', handleOpenRegister);
     window.addEventListener('snte-open-member-card', handleOpenCard);
+    window.addEventListener('snte-open-pending-members', handleOpenPendingMembers);
+    window.addEventListener('snte-open-hierarchy', handleOpenHierarchy);
     window.addEventListener('snte-topic-published', loadRequestsCount);
+    window.addEventListener('snte-members-updated', () => {
+      refreshUser();
+      loadPendingMembersCount();
+    });
+    window.addEventListener('snte-member-registered', () => {
+      refreshUser();
+      loadPendingMembersCount();
+    });
     window.addEventListener('storage', () => {
       refreshUser();
       loadRequestsCount();
+      loadPendingMembersCount();
     });
 
     (window as any).openSnteLogin = handleOpenLogin;
     (window as any).openSnteRegister = handleOpenRegister;
     (window as any).openSnteCard = handleOpenCard;
+    (window as any).openSntePendingMembers = handleOpenPendingMembers;
+    (window as any).openSnteHierarchy = handleOpenHierarchy;
 
     // Handle outside clicks for dropdown
     const handleClickOutside = (event: MouseEvent) => {
@@ -127,6 +187,8 @@ export const TopAuthBar: React.FC = () => {
       window.removeEventListener('snte-open-login', handleOpenLogin);
       window.removeEventListener('snte-open-register', handleOpenRegister);
       window.removeEventListener('snte-open-member-card', handleOpenCard);
+      window.removeEventListener('snte-open-pending-members', handleOpenPendingMembers);
+      window.removeEventListener('snte-open-hierarchy', handleOpenHierarchy);
       window.removeEventListener('snte-topic-published', loadRequestsCount);
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -163,8 +225,12 @@ export const TopAuthBar: React.FC = () => {
     window.dispatchEvent(
       new CustomEvent('snte-switch-portfolio', { detail: { category: catKey } })
     );
-    // Scroll to section
-    const elem = document.getElementById('unionPortfoliosSection');
+    // Scroll to the specific dedicated section
+    const targetId =
+      catKey === 'wilaya_acts' || catKey === 'region_acts'
+        ? 'unionActivitiesSection'
+        : 'memberServicesSection';
+    const elem = document.getElementById(targetId) || document.getElementById('unionPortfoliosSection');
     if (elem) {
       elem.scrollIntoView({ behavior: 'smooth' });
     }
@@ -183,31 +249,193 @@ export const TopAuthBar: React.FC = () => {
     }
   };
 
+  const isTemporaryMember =
+    currentUser?.role === 'MEMBER' &&
+    (currentUser?.isTemporary ||
+      currentUser?.membershipStatus === 'temporary_pending' ||
+      (currentUser?.temporaryExpiresAt && Date.now() < currentUser?.temporaryExpiresAt && !currentUser?.duesPaid));
+
+  const memberWilayaData: WilayaData | undefined =
+    currentUser?.wilayaCode
+      ? WILAYAS_LIST.find(
+          (w) => String(w.code).padStart(2, '0') === String(currentUser.wilayaCode).padStart(2, '0')
+        )
+      : undefined;
+
+  const calculateDaysRemaining = () => {
+    if (!currentUser?.temporaryExpiresAt) return 7;
+    const diff = currentUser.temporaryExpiresAt - Date.now();
+    return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+  };
+
   const getRoleBadge = () => {
     if (!currentUser) return null;
-    switch (currentUser.role) {
+    const roleId = currentUser.hierarchyRoleId || currentUser.role;
+
+    switch (roleId) {
       case 'NATIONAL_SG':
+      case 'national-sg':
         return (
           <span className="bg-amber-400 text-emerald-950 font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
             <span>👑</span>
             <span>الأمين العام الوطني</span>
           </span>
         );
-      case 'GENERAL_COORDINATOR':
+      case 'national-congress':
         return (
-          <span className="bg-blue-600 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+          <span className="bg-emerald-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🏛️</span>
+            <span>عضو مؤتمر وطني</span>
+          </span>
+        );
+      case 'national-council':
+        return (
+          <span className="bg-blue-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>📜</span>
+            <span>عضو مجلس وطني</span>
+          </span>
+        );
+      case 'national-secretariat':
+        return (
+          <span className="bg-[#004d26] text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>💼</span>
+            <span>الأمانة الوطنية</span>
+          </span>
+        );
+      case 'GENERAL_COORDINATOR':
+      case 'regional-coordination':
+        return (
+          <span className="bg-cyan-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
             <span>🌐</span>
-            <span>المنسق العام ({currentUser.region || 'الجهوي'})</span>
+            <span>الأمانة الجهوية للتنسيق ({currentUser.region || 'الجهوي'})</span>
+          </span>
+        );
+      case 'national-corps':
+        return (
+          <span className="bg-indigo-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🎯</span>
+            <span>تنسيقيات وطنية للرتب والأسلاك</span>
+          </span>
+        );
+      case 'elders-council':
+        return (
+          <span className="bg-amber-600 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>👴</span>
+            <span>لجنة الحكماء (المتقاعدين)</span>
+          </span>
+        );
+      case 'advisor-legal':
+        return (
+          <span className="bg-purple-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>⚖️</span>
+            <span>مستشار الشؤون القانونية</span>
+          </span>
+        );
+      case 'advisor-pedagogy':
+        return (
+          <span className="bg-purple-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🎓</span>
+            <span>مستشار شؤون التربية والبيداغوجيا</span>
+          </span>
+        );
+      case 'advisor-media':
+        return (
+          <span className="bg-purple-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>📢</span>
+            <span>مسؤولة الخلية الوطنية للإعلام والتنظيم</span>
+          </span>
+        );
+      case 'advisor-comm':
+        return (
+          <span className="bg-purple-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>💻</span>
+            <span>مستشار تقنيات التواصل</span>
           </span>
         );
       case 'WILAYA_SG':
+      case 'wilaya-sg':
         return (
           <span className="bg-emerald-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
             <span>🏛️</span>
             <span>الأمانة الولائية ({currentUser.wilayaName || currentUser.wilayaCode})</span>
           </span>
         );
+      case 'wilaya-council':
+        return (
+          <span className="bg-teal-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>📋</span>
+            <span>عضو مجلس ولائي ({currentUser.wilayaName || currentUser.wilayaCode})</span>
+          </span>
+        );
+      case 'wilaya-secretariat':
+        return (
+          <span className="bg-emerald-900 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🏬</span>
+            <span>الأمانة الولائية ({currentUser.wilayaName || currentUser.wilayaCode})</span>
+          </span>
+        );
+      case 'wilaya-corps':
+        return (
+          <span className="bg-indigo-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🏷️</span>
+            <span>تنسيقيات ولائية للرتب والأسلاك</span>
+          </span>
+        );
+      case 'MUNICIPAL_SG':
+      case 'municipal-sg':
+        return (
+          <span className="bg-amber-600 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🏢</span>
+            <span>أمين عام بلدي ({currentUser.municipalName || 'البلدية'})</span>
+          </span>
+        );
+      case 'municipal-council':
+        return (
+          <span className="bg-amber-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>👥</span>
+            <span>عضو مجلس بلدي</span>
+          </span>
+        );
+      case 'municipal-secretariat':
+        return (
+          <span className="bg-yellow-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>📑</span>
+            <span>الأمانة البلدية</span>
+          </span>
+        );
+      case 'BRANCH_SG':
+      case 'branch-sg':
+        return (
+          <span className="bg-emerald-600 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🏫</span>
+            <span>أمين عام فرع نقابي بالمؤسسة</span>
+          </span>
+        );
+      case 'branch-assembly-member':
+        return (
+          <span className="bg-blue-600 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🗳️</span>
+            <span>عضو جمعية فرع نقابي</span>
+          </span>
+        );
+      case 'branch-secretariat':
+        return (
+          <span className="bg-teal-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+            <span>🤝</span>
+            <span>أمانة الفرع النقابي</span>
+          </span>
+        );
       case 'MEMBER':
+      case 'union-member':
+        if (isTemporaryMember) {
+          const days = calculateDaysRemaining();
+          return (
+            <span className="bg-amber-400 text-slate-950 font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1 border border-amber-300">
+              <span>⏳</span>
+              <span>عضوية مؤقتة (متبقي {days} أيام)</span>
+            </span>
+          );
+        }
         return (
           <span className="bg-purple-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
             <span>🪪</span>
@@ -217,7 +445,7 @@ export const TopAuthBar: React.FC = () => {
       default:
         return (
           <span className="bg-gray-800 text-white font-bold text-[11px] px-2 py-0.5 rounded-full">
-            {currentUser.role}
+            {currentUser.structureName || currentUser.role}
           </span>
         );
     }
@@ -250,25 +478,55 @@ export const TopAuthBar: React.FC = () => {
             </div>
           </div>
 
-          {/* Center Navigation: Dropdown Menu for the 6 new sections */}
+          {/* Center Navigation: Separate Activities, Hierarchy and Member Services buttons */}
           <div className="flex items-center gap-2 flex-wrap" ref={dropdownRef}>
-            {/* The Dropdown Menu (القوائم المنسدلة للأقسام الستة) */}
+            {/* 1. زر النشاطات النقابية الميدانية (مستقل وظاهر) */}
+            <button
+              type="button"
+              onClick={() => handleNavigateToCategory('wilaya_acts')}
+              className="bg-emerald-600/90 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border border-emerald-400/50 shadow-xs transition-all cursor-pointer"
+              title="الانتقال المباشر لنشاطات الأمانات الولائية والتنسيقيات الجهوية"
+            >
+              <span>🏛️</span>
+              <span>النشاطات النقابية</span>
+            </button>
+
+            {/* 2. زر الهياكل والسلم النقابي (مستقل وظاهر) */}
+            <button
+              type="button"
+              onClick={() => setIsHierarchyOpen(true)}
+              className="bg-emerald-800/90 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border border-emerald-500/50 shadow-xs transition-all cursor-pointer"
+              title="دليل الهياكل والسلم النقابي الرسمي للاتحاد الوطني لعمال التربية"
+            >
+              <span>🪜</span>
+              <span>الهياكل والسلم النقابي</span>
+            </button>
+
+            {/* 3. زر قسم خدمات المنخرطين (الحقائب والمنصات) */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsPortfoliosDropdownOpen(!isPortfoliosDropdownOpen)}
-                className="bg-white/10 hover:bg-white/20 text-amber-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border border-amber-400/30 transition-all cursor-pointer"
+                className="bg-amber-400 hover:bg-amber-300 text-emerald-950 px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border border-amber-300 shadow-xs transition-all cursor-pointer"
+                title="فضاء خدمات المنخرطين: المنصات الرقمية والحقائب النقابية"
               >
-                <span>📂</span>
-                <span>الحقائب والنشاطات والمنصات</span>
+                <span>💼</span>
+                <span>خدمات المنخرطين (الحقائب والمنصات)</span>
                 <span className="text-[10px]">▼</span>
               </button>
 
               {/* Dropdown Items List */}
               {isPortfoliosDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-72 bg-white text-gray-900 rounded-2xl shadow-2xl border border-gray-200 py-2 z-50 text-right text-xs">
-                  <div className="px-3 py-1.5 border-b border-gray-100 text-[11px] font-black text-[#006633] bg-emerald-50/60">
-                    أقسام الحقائب والمنصات النقابية
+                  <div className="px-3 py-1.5 border-b border-gray-100 text-[11px] font-black text-[#006633] bg-emerald-50/60 flex items-center justify-between">
+                    <span>💼 خدمات المنخرطين والحقائب المعتمدة</span>
+                    <button
+                      type="button"
+                      onClick={() => handleNavigateToCategory('platforms')}
+                      className="text-[10px] text-blue-700 hover:underline"
+                    >
+                      فتح القسم
+                    </button>
                   </div>
 
                   {(Object.keys(CATEGORY_INFO) as TopicCategory[]).map((catKey) => {
@@ -378,6 +636,21 @@ export const TopAuthBar: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setIsPendingMembersOpen(true)}
+                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-emerald-400"
+                  title="مراجعة طلبات الانخراط وتفعيل اشتراك 100 دج"
+                >
+                  <span>🪪</span>
+                  <span className="hidden sm:inline">طلبات الانخراط</span>
+                  <span className="sm:hidden">الانخراطات</span>
+                  {pendingMembersCount > 0 && (
+                    <span className="bg-amber-400 text-slate-950 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-black animate-pulse">
+                      {pendingMembersCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleActionForTopic('union_bag')}
                   className="bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-emerald-400"
                   title="إضافة موضوع وتعديله (خاص بالأمين العام الوطني)"
@@ -388,6 +661,22 @@ export const TopAuthBar: React.FC = () => {
               </div>
             ) : isWilayaOrRegionalSG ? (
               <div className="flex items-center gap-1.5">
+                {currentUser?.role === 'WILAYA_SG' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPendingMembersOpen(true)}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-emerald-400"
+                    title={`مراجعة طلبات الانخراط وتفعيل سداد 100 دج لولاية ${currentUser.wilayaName || currentUser.wilayaCode}`}
+                  >
+                    <span>🪪</span>
+                    <span>انخراطات الولاية</span>
+                    {pendingMembersCount > 0 && (
+                      <span className="bg-amber-300 text-emerald-950 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-black animate-pulse">
+                        {pendingMembersCount}
+                      </span>
+                    )}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsRequestModalOpen(true)}
@@ -499,6 +788,83 @@ export const TopAuthBar: React.FC = () => {
         </div>
       </nav>
 
+      {/* Dedicated Notice Banner for Temporary Member (ولوج تجريبي مؤقت لمدة أسبوع) */}
+      {isTemporaryMember && (
+        <aside
+          aria-label="إعلام خاص بالمنخرط الجديد"
+          className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 text-slate-950 border-b-2 border-amber-600 shadow-md font-['Cairo',sans-serif]"
+        >
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white/95 text-amber-700 flex items-center justify-center text-2xl shadow-sm shrink-0 border border-amber-400">
+                  ⏳
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-sm sm:text-base text-emerald-950">
+                      إعلام خاص بالمنخرط الجديد: ولوج تجريبي مؤقت (متبقي {calculateDaysRemaining()} أيام)
+                    </span>
+                    <span className="bg-emerald-900 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                      قيد اقتناء البطاقة الورقية
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-900 mt-1 leading-relaxed max-w-3xl">
+                    مرحباً بك زميلنا الكريم في رحاب S.N.T.E! حسابك مفعل بصفة مؤقتة لمدة 7 أيام للاستفادة الكاملة من كافة الخدمات، الحقائب النقابية والمنصات الرقمية. لتثبيت عضويتكم بصفة نهائية يرجى التوجه لمقر الأمانة الولائية لدفع الاشتراك السنوي الرمزي (100 دج) واستلام بطاقة الانخراط الورقية الرسمية لتفعيل الحساب نهائياً.
+                  </p>
+                </div>
+              </div>
+
+              {/* Contact Card for Member's Wilaya General Secretary */}
+              <div className="w-full lg:w-auto bg-white/95 rounded-2xl p-3 border border-amber-500 shadow-sm flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                <div className="text-xs space-y-0.5">
+                  <div className="text-[10px] font-bold text-gray-500 flex items-center gap-1">
+                    <span>🏛️</span>
+                    <span>الأمانة الولائية التابع لها ({currentUser?.wilayaName || (memberWilayaData ? memberWilayaData.name : 'الولاية')}):</span>
+                  </div>
+                  <div className="font-black text-emerald-950 text-xs flex items-center gap-1">
+                    <span>👤</span>
+                    <span>الأمين العام الولائي:</span>
+                    <span className="text-emerald-800 font-bold">{memberWilayaData?.sgName || 'الأمين العام الولائي'}</span>
+                  </div>
+                  {memberWilayaData?.phone && (
+                    <div className="text-[11px] text-gray-800 font-bold flex items-center gap-1">
+                      <span>📞 الهاتف:</span>
+                      <a href={`tel:${memberWilayaData.phone}`} className="text-blue-700 hover:underline font-mono font-bold" dir="ltr">
+                        {memberWilayaData.phone}
+                      </a>
+                    </div>
+                  )}
+                  {memberWilayaData?.headquarters && (
+                    <div className="text-[10px] text-gray-600 truncate max-w-[240px]" title={memberWilayaData.headquarters}>
+                      <span>📍 المقر: </span>
+                      <span>{memberWilayaData.headquarters}</span>
+                    </div>
+                  )}
+                  {memberWilayaData?.email && (
+                    <div className="text-[10px] text-gray-600 font-mono truncate max-w-[240px]">
+                      <span>✉️ </span>
+                      <span>{memberWilayaData.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex sm:flex-col gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCardOpen(true)}
+                    className="w-full bg-[#006633] hover:bg-[#004d26] text-white text-xs font-black px-3 py-2 rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <span>🪪</span>
+                    <span>معاينة البطاقة المؤقتة</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      )}
+
       {/* Modals */}
       <UnifiedLoginModal
         isOpen={isLoginOpen}
@@ -559,6 +925,34 @@ export const TopAuthBar: React.FC = () => {
           loadRequestsCount();
           const elem = document.getElementById('unionPortfoliosSection');
           if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
+
+      {/* Pending Members Review & Activation Modal */}
+      <PendingMembersReviewModal
+        isOpen={isPendingMembersOpen}
+        onClose={() => {
+          setIsPendingMembersOpen(false);
+          loadPendingMembersCount();
+        }}
+        currentUser={currentUser}
+        onMemberUpdated={() => {
+          refreshUser();
+          loadPendingMembersCount();
+        }}
+      />
+
+      {/* Union Hierarchy & Ladder Modal */}
+      <UnionHierarchyModal
+        isOpen={isHierarchyOpen}
+        onClose={() => setIsHierarchyOpen(false)}
+        onOpenLoginWithRole={() => {
+          setIsHierarchyOpen(false);
+          setIsLoginOpen(true);
+        }}
+        onOpenRegister={() => {
+          setIsHierarchyOpen(false);
+          setIsRegisterOpen(true);
         }}
       />
     </>

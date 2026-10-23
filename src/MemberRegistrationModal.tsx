@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WILAYAS_LIST, EDUCATION_RANKS, WilayaData } from './wilayasList';
 import { MemberData } from './DigitalMembershipCardModal';
+import { OFFICIAL_UNION_ROLES } from './unionHierarchy';
 import {
   findWilayaAllocation,
   generateNextCardNumberForWilaya,
@@ -29,6 +30,7 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
   const [municipalName, setMunicipalName] = useState('عين الإبل');
   const [institutionName, setInstitutionName] = useState('ثانوية عبد الحميد بن باديس');
   const [rank, setRank] = useState('أستاذ التعليم الثانوي');
+  const [hierarchyRole, setHierarchyRole] = useState('منخرط');
   const [workplace, setWorkplace] = useState('المقر الرئيسي للمؤسسة');
   const [nationalId, setNationalId] = useState(''); // NIN 18 digits
   const [socialSecurityNo, setSocialSecurityNo] = useState(''); // رقم الضمان
@@ -143,8 +145,11 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
     setIsSubmitting(true);
 
     try {
+      const regTime = Date.now();
+      const expiresTime = regTime + 7 * 24 * 60 * 60 * 1000; // 7 days grace period
+
       const newMember: MemberData = {
-        id: `mem-${Date.now()}`,
+        id: `mem-${regTime}`,
         nationalId: nationalId.trim(),
         socialSecurityNo: socialSecurityNo.trim(),
         membershipCardNo: finalCardNo,
@@ -158,9 +163,15 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
         municipalName: municipalName.trim() || 'المركز',
         institutionName: institutionName.trim() || 'مؤسسة تربوية',
         rank: rank,
+        hierarchyRole: hierarchyRole,
+        hierarchyLevel: OFFICIAL_UNION_ROLES.find((r) => r.title === hierarchyRole)?.level || 'منخرط',
         workplace: workplace.trim() || municipalName.trim(),
         joinDate: new Date().toISOString().split('T')[0],
-        status: 'بانتظار التفعيل',
+        status: 'مؤقت (أسبوع تجريبي)',
+        membershipStatus: 'temporary_pending',
+        registrationTimestamp: regTime,
+        temporaryExpiresAt: expiresTime,
+        duesPaid: false,
       };
 
       // 1. Save to members in localStorage (snte_members_v3)
@@ -183,8 +194,10 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
       const memberAccount = {
         id: newMember.id,
         name: newMember.fullName,
-        title: `منخرط نقابي - بطاقة ${newMember.membershipCardNo}`,
+        title: `${hierarchyRole} (مؤقت) - بطاقة ${newMember.membershipCardNo}`,
         structureName: `الأمانة الولائية - ولاية ${newMember.wilayaName}`,
+        hierarchyRoleId: OFFICIAL_UNION_ROLES.find((r) => r.title === hierarchyRole)?.id || 'union-member',
+        hierarchyRole: hierarchyRole,
         email: newMember.email,
         phone: newMember.phone,
         role: 'MEMBER',
@@ -195,13 +208,24 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
         institutionName: newMember.institutionName,
         membershipCardNo: newMember.membershipCardNo,
         nationalId: newMember.nationalId,
+        socialSecurityNo: newMember.socialSecurityNo,
+        rank: newMember.rank,
+        workplace: newMember.workplace,
         username: newMember.membershipCardNo,
         password: password.trim() || 'snte2026',
-        status: 'بانتظار التفعيل',
+        status: 'مؤقت (أسبوع تجريبي)',
+        membershipStatus: 'temporary_pending',
+        registrationTimestamp: regTime,
+        temporaryExpiresAt: expiresTime,
+        isTemporary: true,
+        daysRemaining: 7,
       };
 
       const updatedAccounts = [memberAccount, ...existingAccounts.filter((a) => a.id !== newMember.id)];
       localStorage.setItem('snte_accounts_v3', JSON.stringify(updatedAccounts));
+
+      // Immediately log the new member in with their temporary active status
+      localStorage.setItem('snte_user', JSON.stringify(memberAccount));
 
       // 3. Notify app components
       window.dispatchEvent(new CustomEvent('snte-member-registered', { detail: newMember }));
@@ -290,19 +314,23 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
               </span>
             </div>
 
-            {/* MANDATORY NOTICE AS SPECIFIED BY USER */}
+            {/* MANDATORY NOTICE: 7-DAY TEMPORARY ACCESS & WILAYA SG CONTACT */}
             <div className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-5 text-right space-y-3">
-              <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
-                <span className="text-xl">⚠️</span>
-                <span>تنبيه هام وملاحظة إدارية لتفعيل الحساب:</span>
+              <div className="flex items-center justify-between text-amber-900 font-black text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">⏳</span>
+                  <span>إعلام خاص: حسابك مفعل بصفة مؤقتة لمدة أسبوع (7 أيام)</span>
+                </div>
+                <span className="bg-amber-400 text-emerald-950 text-[10px] font-black px-2.5 py-0.5 rounded-full">
+                  ولوج مؤقت نشط
+                </span>
               </div>
               <p className="text-xs sm:text-sm text-amber-950 leading-relaxed font-semibold">
-                حسابك الآن في حالة <span className="text-red-700 font-black">«بانتظار التفعيل»</span>.
-                بناءً على التعليمات التنظيمية للنقابة الوطنية لعمال التربية S.N.T.E،{' '}
-                <strong className="text-red-800 underline">
-                  يجب عليك الاتصال بالأمين العام الولائي لولايتك أو بالأمانة العامة الوطنية
-                </strong>{' '}
-                من أجل تفعيل حسابك والاستفادة التامة من خدمات المنصات الرقمية والحقائب النقابية والتربوية والقانونية.
+                تم تفعيل حسابك بصفة مؤقتة لمدة <strong className="text-emerald-900">أسبوع (7 أيام)</strong> للاستفادة الفورية من كافة خدمات المنصات والحقائب النقابية والتربوية والقانونية.
+                <br />
+                <strong className="text-red-700 block mt-1.5">
+                  📌 لتثبيت عضويتكم بشكل رسمي ودائم وتفادي انتهاء الصلاحية، يرجى التقرب من الأمانة الولائية التابع لها لاقتناء بطاقة الانخراط الورقية وتسديد مبلغ الاشتراك السنوي القانوني (100 دج).
+                </strong>
               </p>
 
               {/* Wilaya SG Contact Card */}
@@ -507,6 +535,51 @@ export const MemberRegistrationModal: React.FC<MemberRegistrationModalProps> = (
                         {r}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
+                    <span>الهيكل والصفة في السلم النقابي <span className="text-red-500">*</span></span>
+                    <span className="text-[10px] text-[#006633] font-bold">5 مستويات</span>
+                  </label>
+                  <select
+                    value={hierarchyRole}
+                    onChange={(e) => setHierarchyRole(e.target.value)}
+                    className="w-full px-3 py-2 border border-emerald-400 bg-emerald-50/30 rounded-xl text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#006633]"
+                  >
+                    <optgroup label="المستوى القاعدي">
+                      <option value="منخرط">🪪 منخرط (حامل بطاقة الانخراط)</option>
+                    </optgroup>
+                    <optgroup label="مستوى المؤسسات التربوية والفروع النقابية">
+                      <option value="أمين عام فرع نقابي">🏫 أمين عام فرع نقابي بالمؤسسة</option>
+                      <option value="عضو جمعية عامة فرع نقابي">🗳️ عضو جمعية عامة فرع نقابي</option>
+                      <option value="أمانة الفرع النقابي">🤝 أمانة الفرع النقابي (مكتب المؤسسة)</option>
+                    </optgroup>
+                    <optgroup label="المستوى البلدي">
+                      <option value="أمين عام بلدي">🏢 أمين عام بلدي</option>
+                      <option value="عضو مجلس بلدي">👥 عضو مجلس بلدي</option>
+                      <option value="الأمانة البلدية">📑 الأمانة البلدية</option>
+                    </optgroup>
+                    <optgroup label="المستوى الولائي">
+                      <option value="أمين عام ولائي">🏛️ أمين عام ولائي</option>
+                      <option value="عضو مجلس ولائي">📋 عضو مجلس ولائي</option>
+                      <option value="الأمانة الولائية">🏬 الأمانة الولائية</option>
+                      <option value="تنسيقيات ولائية للرتب والأسلاك">🏷️ تنسيقيات ولائية للرتب والأسلاك</option>
+                    </optgroup>
+                    <optgroup label="المستوى الوطني (القيادة المركزية)">
+                      <option value="عضو مؤتمر وطني">🏛️ عضو مؤتمر وطني</option>
+                      <option value="عضو مجلس وطني">📜 عضو مجلس وطني</option>
+                      <option value="الأمانة الوطنية">💼 الأمانة الوطنية</option>
+                      <option value="الأمانة الجهوية للتنسيق">🌐 الأمانة الجهوية للتنسيق</option>
+                      <option value="تنسيقات وطنية للرتب والأسلاك">🎯 تنسيقات وطنية للرتب والأسلاك</option>
+                      <option value="لجنة الحكماء (المتقاعدين)">👴 لجنة الحكماء (المتقاعدين)</option>
+                      <option value="مستشار الشؤون القانونية والمنازعات">⚖️ مستشار الشؤون القانونية</option>
+                      <option value="مستشار شؤون التربية والبيداغوجيا">🎓 مستشار شؤون التربية والبيداغوجيا</option>
+                      <option value="مسؤولة عامة للخلية الوطنية للإعلام والتنظيم">📢 مسؤولة عامة للخلية الوطنية للإعلام والتنظيم</option>
+                      <option value="مستشار المكلف بتقنيات التواصل والرقمنة">💻 مستشار المكلف بتقنيات التواصل</option>
+                      <option value="أمين عام وطني">👑 أمين عام وطني</option>
+                    </optgroup>
                   </select>
                 </div>
 
