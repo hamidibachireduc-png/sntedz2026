@@ -12,6 +12,7 @@ import { RequestPublicationModal } from './RequestPublicationModal';
 import { PublicationRequestsReviewModal } from './PublicationRequestsReviewModal';
 import { REGIONAL_COORDINATORS, WILAYAS_LIST } from './wilayasList';
 import { UnionAnalyticsDashboard } from './UnionAnalyticsDashboard';
+import { DigitalPlatformsModal, OFFICIAL_SNTE_PLATFORMS, DigitalPlatform } from './DigitalPlatformsModal';
 
 interface UnionPortfoliosSectionProps {
   initialMemberCategory?: TopicCategory;
@@ -208,6 +209,8 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedTopicDetails, setSelectedTopicDetails] = useState<UnionTopic | null>(null);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [isPlatformsModalOpen, setIsPlatformsModalOpen] = useState(false);
+  const [selectedPlatformModalId, setSelectedPlatformModalId] = useState<string | undefined>(undefined);
 
   // Determine user authorization
   const isNationalSG =
@@ -338,9 +341,15 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
       loadRequestsCount();
     };
 
+    const handleOpenDigitalPlatforms = (e: any) => {
+      setSelectedPlatformModalId(e.detail?.platformId);
+      setIsPlatformsModalOpen(true);
+    };
+
     window.addEventListener('snte-switch-portfolio', handleSwitchCategory);
     window.addEventListener('snte-open-add-topic', handleOpenAddTopic);
     window.addEventListener('snte-topic-published', handleTopicPublishedEvent);
+    window.addEventListener('snte-open-digital-platforms', handleOpenDigitalPlatforms);
     window.addEventListener('storage', () => {
       refreshUser();
       loadTopics();
@@ -352,6 +361,7 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
       window.removeEventListener('snte-switch-portfolio', handleSwitchCategory);
       window.removeEventListener('snte-open-add-topic', handleOpenAddTopic);
       window.removeEventListener('snte-topic-published', handleTopicPublishedEvent);
+      window.removeEventListener('snte-open-digital-platforms', handleOpenDigitalPlatforms);
     };
   }, []);
 
@@ -860,6 +870,95 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
                 <p className="text-xs text-emerald-100 leading-relaxed">
                   منظومة رقمية شاملة لإدارة الهياكل، بطاقات الانخراط الإلكترونية والورقية، تتبع المحاضر، وإصدار التنبيهات الفورية وفق السلم النقابي.
                 </p>
+              </div>
+            </div>
+
+            {/* مجمع المنصات الرقمية الوطنية الأربعة المعتمدة (متاح للجميع) */}
+            <div className="bg-gradient-to-r from-emerald-950 via-[#004d26] to-emerald-950 rounded-3xl p-5 sm:p-6 text-white border-2 border-emerald-400/50 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-emerald-600/40 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-2xl font-black shadow-md shrink-0">
+                    🌐
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
+                        منظومات معتمدة ومباشرة
+                      </span>
+                      <span className="bg-emerald-800 text-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-400/40">
+                        الرقمنة النقابية 2026
+                      </span>
+                    </div>
+                    <h4 className="text-base sm:text-lg font-black text-white mt-1">
+                      المنصات الرقمية الوطنية الرسمية للنقابة الوطنية لعمال التربية (4 منصات)
+                    </h4>
+                    <p className="text-xs text-emerald-100/90 leading-relaxed max-w-2xl">
+                      منصات العمل الميداني للأسنتيو: الانخراط، الهيكلة والمحاضر، بطاقات الاتصال، وحملة التبرع بالدم الوطنية.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPlatformModalId(undefined);
+                    setIsPlatformsModalOpen(true);
+                  }}
+                  className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer shrink-0"
+                >
+                  <span>🖥️</span>
+                  <span>فتح بوابة المنصات الموحدة</span>
+                </button>
+              </div>
+
+              {/* Grid of the 4 platforms cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
+                {OFFICIAL_SNTE_PLATFORMS.map((platform) => (
+                  <div
+                    key={platform.id}
+                    className="bg-white text-slate-900 rounded-2xl p-4 flex flex-col justify-between border border-emerald-300 shadow-md hover:border-amber-400 transition-all hover:-translate-y-0.5 group"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl p-1.5 rounded-xl bg-slate-100 group-hover:scale-110 transition-transform">
+                          {platform.icon}
+                        </span>
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${platform.colorTheme.badge}`}>
+                          {platform.tag}
+                        </span>
+                      </div>
+                      <h5 className="font-black text-xs sm:text-sm text-slate-950 line-clamp-1">
+                        {platform.name}
+                      </h5>
+                      <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                        {platform.subtitle}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-200 mt-3 flex items-center justify-between gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPlatformModalId(platform.id);
+                          setIsPlatformsModalOpen(true);
+                        }}
+                        className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-black transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1 ${platform.colorTheme.button}`}
+                      >
+                        <span>🖥️</span>
+                        <span>معاينة</span>
+                      </button>
+                      <a
+                        href={platform.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all border border-slate-300 flex items-center justify-center"
+                        title="فتح في نافذة كاملة جديدة"
+                      >
+                        <span>↗</span>
+                      </a>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -1432,6 +1531,13 @@ export const UnionPortfoliosSection: React.FC<UnionPortfoliosSectionProps> = () 
           </div>
         </div>
       )}
+
+      {/* Modal for official digital platforms */}
+      <DigitalPlatformsModal
+        isOpen={isPlatformsModalOpen}
+        onClose={() => setIsPlatformsModalOpen(false)}
+        initialPlatformId={selectedPlatformModalId}
+      />
     </div>
   );
 };

@@ -16,6 +16,8 @@ import { VirtualMeetingModal } from './VirtualMeetingModal';
 import { UserProfileModal } from './UserProfileModal';
 import { UnionStatutesModal } from './UnionStatutesModal';
 import { ContactSupportComponent } from './ContactSupportComponent';
+import { DigitalPlatformsModal } from './DigitalPlatformsModal';
+import { GitHubExportModal } from './GitHubExportModal';
 import {
   SnteNotification,
   generateDynamicNotifications,
@@ -49,6 +51,8 @@ export const TopAuthBar: React.FC = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isStatutesOpen, setIsStatutesOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isPlatformsModalOpen, setIsPlatformsModalOpen] = useState(false);
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<SnteNotification[]>([]);
   const [toastNotification, setToastNotification] = useState<SnteNotification | null>(null);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
@@ -214,6 +218,8 @@ export const TopAuthBar: React.FC = () => {
     };
 
     const handleOpenContact = () => setIsContactOpen(true);
+    const handleOpenDigitalPlatforms = () => setIsPlatformsModalOpen(true);
+    const handleOpenGitHubModal = () => setIsGitHubModalOpen(true);
 
     window.addEventListener('snte-open-login', handleOpenLogin);
     window.addEventListener('snte-open-register', handleOpenRegister);
@@ -223,6 +229,8 @@ export const TopAuthBar: React.FC = () => {
     window.addEventListener('snte-open-notifications', handleOpenNotifications);
     window.addEventListener('snte-open-membership-status', handleOpenStatus);
     window.addEventListener('snte-open-contact', handleOpenContact);
+    window.addEventListener('snte-open-digital-platforms', handleOpenDigitalPlatforms);
+    window.addEventListener('snte-open-github-modal', handleOpenGitHubModal);
     window.addEventListener('snte-notifications-updated', handleNotifsUpdate);
     window.addEventListener('snte-topic-published', loadRequestsCount);
     window.addEventListener('snte-members-updated', () => {
@@ -246,6 +254,8 @@ export const TopAuthBar: React.FC = () => {
     (window as any).openSnteNotifications = handleOpenNotifications;
     (window as any).openSnteMembershipStatus = handleOpenStatus;
     (window as any).openContactSupport = handleOpenContact;
+    (window as any).openDigitalPlatforms = handleOpenDigitalPlatforms;
+    (window as any).openGitHubModal = handleOpenGitHubModal;
 
     const notifTimer = setInterval(() => {
       loadNotifications(false);
@@ -625,6 +635,24 @@ export const TopAuthBar: React.FC = () => {
             <span>💼</span>
             <span>الحقائب والمنصات</span>
           </button>
+
+          <button
+            onClick={() => setIsPlatformsModalOpen(true)}
+            className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white px-3.5 py-1.5 rounded-full border border-teal-300/80 shadow-md transition-all cursor-pointer flex items-center gap-1.5 font-black animate-pulse"
+            title="المنصات الرقمية الـ 4 المعتمدة: الانخراط، الهيكلة والمحاضر، بطاقات الاتصال، التبرع بالدم"
+          >
+            <span>🌐</span>
+            <span>المنصات الرقمية (4)</span>
+          </button>
+
+          <button
+            onClick={() => setIsGitHubModalOpen(true)}
+            className="bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-white px-3.5 py-1.5 rounded-full border border-amber-400/60 shadow-md transition-all cursor-pointer flex items-center gap-1.5 font-black"
+            title="نصب المشروع ومزامنته مع مستودع GitHub (hamidibachireduc-png/sntedz2026)"
+          >
+            <span>🐙</span>
+            <span>مستودع GitHub</span>
+          </button>
           <button
             onClick={() => {
               const el = document.getElementById('interactive-map-section');
@@ -981,6 +1009,16 @@ export const TopAuthBar: React.FC = () => {
           </div>
         </aside>
       )}
+      <DigitalPlatformsModal
+        isOpen={isPlatformsModalOpen}
+        onClose={() => setIsPlatformsModalOpen(false)}
+      />
+
+      <GitHubExportModal
+        isOpen={isGitHubModalOpen}
+        onClose={() => setIsGitHubModalOpen(false)}
+      />
+
       <NationalSGThemeCustomizerModal isOpen={isCustomizerOpen} onClose={() => setIsCustomizerOpen(false)} />
     </>
   );
