@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  --primary-green: #006633;
+  --dark-green: #003d1e;
+  --light-green: #e8f5e9;
+  --accent-red: #d21034;
+  --gold: #d4af37;
+  --font-family: "Cairo", "Tajawal", "Almarai", sans-serif;
+  --base-font-size: 16px;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--base-font-size);
+  -webkit-font-smoothing: antialiased;
+}
+
+body.dark-mode {
+  color: #f8fafc;
+  background-color: #0f172a;
+}
+
+@keyframes marqueeRtl {
+  0% {
+    transform: translate(-100%);
+  }
+  to {
+    transform: translate(100%);
+  }
+}
+
+.animate-marquee {
+  animation: 32s linear infinite marqueeRtl;
+  display: inline-block;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media print {
+  header,
+  footer,
+  nav,
+  button,
+  select,
+  input {
+    display: none !important;
+  }
+  #printableUnionCard,
+  #officialMinuteDocument,
+  #printableReceipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    border-width: 1px !important;
+    display: block !important;
+  }
+  #printableUnionCard {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: #fff !important;
+    background: #004d26 !important;
+  }
+}
