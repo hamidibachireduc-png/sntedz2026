@@ -82,6 +82,7 @@ export const AlgeriaWilayasLeafletMap: React.FC<AlgeriaWilayasLeafletMapProps> =
       maxBounds: algeriaBounds,
       maxBoundsViscosity: 0.8,
       zoomControl: false,
+      attributionControl: false, // Completely disable attribution control and external registration/API key links
     });
 
     // Custom Zoom control in top-left
@@ -95,7 +96,7 @@ export const AlgeriaWilayasLeafletMap: React.FC<AlgeriaWilayasLeafletMapProps> =
     };
   }, []);
 
-  // Tile Layer Manager
+  // Tile Layer Manager (100% Free Open Maps - No API Key, No Carto Registration Needed)
   const currentTileLayerRef = useRef<L.TileLayer | null>(null);
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -105,21 +106,21 @@ export const AlgeriaWilayasLeafletMap: React.FC<AlgeriaWilayasLeafletMapProps> =
       map.removeLayer(currentTileLayerRef.current);
     }
 
-    let url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    let attribution = '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>';
+    // Standard OpenStreetMap (Free, open-source, no Carto account or API key required)
+    let url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let subdomains = 'abc';
 
     if (activeLayerType === 'satellite') {
       url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      attribution = '&copy; Esri, Maxar, Earthstar Geographics';
+      subdomains = 'abcd';
     } else if (activeLayerType === 'terrain') {
       url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-      attribution = '&copy; OpenTopoMap &copy; OSM';
+      subdomains = 'abc';
     }
 
     const tileLayer = L.tileLayer(url, {
-      attribution,
       maxZoom: 19,
-      subdomains: 'abcd',
+      subdomains,
     }).addTo(map);
 
     currentTileLayerRef.current = tileLayer;
