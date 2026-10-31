@@ -106,16 +106,14 @@ export const AlgeriaWilayasLeafletMap: React.FC<AlgeriaWilayasLeafletMapProps> =
       map.removeLayer(currentTileLayerRef.current);
     }
 
-    // Standard OpenStreetMap (Free, open-source, no Carto account or API key required)
-    let url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    let subdomains = 'abc';
+    // High-performance Esri Basemap (100% Free, No API Key, No Carto registration, Full Arabic support)
+    let url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+    let subdomains = 'abcd';
 
     if (activeLayerType === 'satellite') {
       url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      subdomains = 'abcd';
     } else if (activeLayerType === 'terrain') {
-      url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-      subdomains = 'abc';
+      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
     }
 
     const tileLayer = L.tileLayer(url, {
