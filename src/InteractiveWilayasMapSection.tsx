@@ -1,22 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Globe, 
-  ExternalLink, 
-  Maximize2, 
-  Minimize2, 
-  RotateCw, 
-  Layers, 
-  School, 
-  MapPin, 
-  ShieldCheck, 
-  Compass, 
-  CheckCircle2, 
-  Sparkles 
-} from 'lucide-react';
 import { WILAYAS_LIST, WilayaData } from './wilayasList';
 import { WilayaLoginModal } from './WilayaLoginModal';
-import { AlgeriaWilayasLeafletMap } from './AlgeriaWilayasLeafletMap';
-import geo from 'geoalgeria';
 
 const GITHUB_IMAGES_BASE = 'https://raw.githubusercontent.com/hamidibachireduc-png/snte-map-69/main/images/';
 
@@ -27,16 +11,46 @@ const getWhatsAppLink = (phone: string) => {
   return `https://wa.me/${formatted}`;
 };
 
-const getImageUrl = (img?: string) => {
-  if (!img || img.trim() === '') return 'https://l.top4top.io/p_37988hwfa0.png';
-  if (img.startsWith('http://') || img.startsWith('https://')) return img;
-  const cleanId = img.replace(/\.(jpg|jpeg|png)$/i, '');
-  return `${GITHUB_IMAGES_BASE}${cleanId}.jpg`;
-};
-
 const getGoogleMapsLink = (hq: string) => {
   if (!hq) return '#';
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hq + ' الجزائر')}`;
+};
+
+export const REGIONAL_OFFICES: Record<string, { id: string, name: string, color: string, count: number }> = {
+  WEST: { id: 'WEST', name: 'الغرب', color: '#ea580c', count: 14 },
+  EAST: { id: 'EAST', name: 'الشرق', color: '#2563eb', count: 14 },
+  CENTER_1: { id: 'CENTER_1', name: 'الوسط 01', color: '#16a34a', count: 4 },
+  CENTER_2: { id: 'CENTER_2', name: 'الوسط 02', color: '#9333ea', count: 6 },
+  SOUTH_EAST: { id: 'SOUTH_EAST', name: 'الجنوب الشرقي', color: '#4f46e5', count: 8 },
+  SOUTH_WEST: { id: 'SOUTH_WEST', name: 'الجنوب الغربي', color: '#b45309', count: 10 },
+  SOUTH_CENTER: { id: 'SOUTH_CENTER', name: 'جنوب الوسط', color: '#db2777', count: 13 },
+};
+
+// خريطة ربط كل ولاية (برقمها) بالجهة التابعة لها (تم تحديثها لتشمل كل الـ 69 ولاية)
+export const WILAYA_TO_REGION: Record<string, string> = {
+  // الوسط 01
+  "16": "CENTER_1", "9": "CENTER_1", "42": "CENTER_1", "44": "CENTER_1",
+  // الوسط 02
+  "15": "CENTER_2", "10": "CENTER_2", "35": "CENTER_2", "34": "CENTER_2", "6": "CENTER_2", "26": "CENTER_2",
+  // الغرب
+  "31": "WEST", "13": "WEST", "22": "WEST", "29": "WEST", "46": "WEST", "27": "WEST", "20": "WEST", "48": "WEST", "14": "WEST", "38": "WEST", "2": "WEST", "45": "WEST", "61": "WEST", "67": "WEST",
+  // الشرق
+  "25": "EAST", "23": "EAST", "24": "EAST", "21": "EAST", "12": "EAST", "41": "EAST", "40": "EAST", "5": "EAST", "43": "EAST", "19": "EAST", "36": "EAST", "18": "EAST", "39": "EAST", "63": "EAST",
+  // جنوب الوسط
+  "17": "SOUTH_CENTER", "3": "SOUTH_CENTER", "47": "SOUTH_CENTER", "28": "SOUTH_CENTER", "64": "SOUTH_CENTER", "68": "SOUTH_CENTER", "69": "SOUTH_CENTER", "59": "SOUTH_CENTER",
+  // الجنوب الشرقي
+  "30": "SOUTH_EAST", "33": "SOUTH_EAST", "7": "SOUTH_EAST", "57": "SOUTH_EAST", "56": "SOUTH_EAST", "62": "SOUTH_EAST", "65": "SOUTH_EAST",
+  // الجنوب الغربي
+  "8": "SOUTH_WEST", "1": "SOUTH_WEST", "37": "SOUTH_WEST", "11": "SOUTH_WEST", "52": "SOUTH_WEST", "60": "SOUTH_WEST", "58": "SOUTH_WEST",
+  // تمت إضافة الولايات الناقصة إلى الجهات المناسبة 
+  "4": "EAST", // أم البواقي
+  "32": "SOUTH_WEST", // البيض
+  "49": "SOUTH_EAST", // المغير
+  "50": "SOUTH_WEST", // المنيعة
+  "51": "SOUTH_EAST", // أولاد جلال
+  "53": "SOUTH_WEST", // بني عباس
+  "54": "SOUTH_WEST", // تيميمون
+  "55": "SOUTH_EAST", // تقرت
 };
 
 export const InteractiveWilayasMapSection: React.FC = () => {
@@ -48,24 +62,30 @@ export const InteractiveWilayasMapSection: React.FC = () => {
   const [svgMapHtml, setSvgMapHtml] = useState<string>('');
   const [isMapLoading, setIsMapLoading] = useState<boolean>(true);
   const [isWilayaLoginOpen, setIsWilayaLoginOpen] = useState<boolean>(false);
+  const [activeRegionFilter, setActiveRegionFilter] = useState<string | null>(null);
 
-  // Map integration state
-  const [mapSourceMode, setMapSourceMode] = useState<'geoalgeria' | 'snte_vector' | 'geo_explorer'>('geoalgeria');
-  const [isMapExpanded, setIsMapExpanded] = useState<boolean>(false);
-  const [geoSearchQuery, setGeoSearchQuery] = useState<string>('');
+  const regions = Object.values(REGIONAL_OFFICES);
 
+  // جلب البيانات من المخازن
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/hamidibachireduc-png/snte-map-69/main/communes.json')
+    // 1. جلب البلديات
+    fetch('https://geoalgeria.com/api/v1/communes')
       .then((res) => res.json())
       .then((data) => {
-        if (data && Array.isArray(data.communes)) {
-          setCommunesList(data.communes);
-        } else if (Array.isArray(data)) {
+        if (Array.isArray(data)) {
           setCommunesList(data);
+        } else if (data && Array.isArray(data.communes)) {
+          setCommunesList(data.communes);
         }
       })
-      .catch((err) => console.warn('Communes fetch warning:', err));
+      .catch((err) => {
+        console.warn('GeoAlgeria Communes fetch warning:', err);
+        fetch('https://raw.githubusercontent.com/hamidibachireduc-png/snte-map-69/main/communes.json')
+          .then(r => r.json())
+          .then(d => setCommunesList(Array.isArray(d) ? d : (d.communes || [])));
+      });
 
+    // 2. جلب الخريطة من مستودعك
     fetch('https://raw.githubusercontent.com/hamidibachireduc-png/snte-map-69/main/map.svg')
       .then((res) => res.text())
       .then((svgText) => {
@@ -78,6 +98,95 @@ export const InteractiveWilayasMapSection: React.FC = () => {
       });
   }, []);
 
+  // تلوين الخريطة وإضافة الأرقام
+  useEffect(() => {
+    if (!isMapLoading && svgMapHtml) {
+      const svgContainer = document.getElementById('snte-svg-map-container');
+      if (svgContainer) {
+        const svgElement = svgContainer.querySelector('svg');
+        if (svgElement) {
+            const paths = svgElement.querySelectorAll('path');
+            
+            // إضافة حاوية للنصوص (الأرقام) إذا لم تكن موجودة
+            let textGroup = svgElement.querySelector('#wilaya-numbers');
+            if (!textGroup) {
+                textGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                textGroup.setAttribute('id', 'wilaya-numbers');
+                svgElement.appendChild(textGroup);
+            } else {
+                textGroup.innerHTML = ''; // تفريغ الحاوية في حالة إعادة التلوين
+            }
+
+            paths.forEach((path: any) => {
+                let id = path.getAttribute('id') || path.getAttribute('data-wilaya') || path.getAttribute('name');
+                if (id) {
+                    const wilayaNum = parseInt(id.replace(/\D/g, ''), 10).toString();
+                    const regionId = WILAYA_TO_REGION[wilayaNum];
+                    
+                    // تحديد اللون
+                    let fillColor = '#cbd5e1'; // لون رمادي غامق للولايات غير الملونة (لتوضيح النقص)
+                    let opacity = '1';
+
+                    if (activeRegionFilter) {
+                        if (activeRegionFilter === regionId) {
+                            fillColor = REGIONAL_OFFICES[regionId].color;
+                        } else {
+                            fillColor = '#f1f5f9';
+                            opacity = '0.5';
+                        }
+                    } else if (regionId && REGIONAL_OFFICES[regionId]) {
+                        fillColor = REGIONAL_OFFICES[regionId].color;
+                    }
+
+                    // تطبيق اللون
+                    path.style.fill = fillColor;
+                    path.style.opacity = opacity;
+                    path.style.stroke = '#ffffff';
+                    path.style.strokeWidth = '1.2';
+                    path.style.transition = 'all 0.3s ease';
+                    path.style.cursor = 'pointer';
+
+                    // حساب المركز البصري لرسم الرقم
+                    const bbox = path.getBBox();
+                    const centerX = bbox.x + bbox.width / 2;
+                    const centerY = bbox.y + bbox.height / 2;
+
+                    // رسم رقم الولاية
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', centerX.toString());
+                    text.setAttribute('y', centerY.toString());
+                    text.setAttribute('text-anchor', 'middle'); // توسيط النص
+                    text.setAttribute('dominant-baseline', 'middle'); // توسيط رأسي
+                    text.textContent = wilayaNum;
+                    
+                    // تنسيق الرقم
+                    text.style.fill = '#ffffff'; // لون الرقم أبيض
+                    text.style.fontSize = '12px';
+                    text.style.fontWeight = 'bold';
+                    text.style.pointerEvents = 'none'; // لعدم التداخل مع النقر على الولاية
+                    // إضافة ظل للرقم ليكون مقروءًا على الألوان الفاتحة والغامقة
+                    text.style.filter = 'drop-shadow(1px 1px 1px rgba(0,0,0,0.5))';
+
+                    textGroup.appendChild(text);
+
+                    // تأثير التمرير
+                    path.onmouseenter = () => {
+                        path.style.filter = 'brightness(1.1)';
+                        path.style.opacity = '1';
+                    };
+                    path.onmouseleave = () => {
+                        path.style.filter = 'none';
+                        path.style.opacity = opacity;
+                    };
+                }
+            });
+        }
+      }
+    }
+  }, [isMapLoading, svgMapHtml, activeRegionFilter]);
+
+
+  // (البيانات الثابتة للمكاتب وأرقام الهواتف)
   const nationalMembers = [
     { id: "sg_kwaider", name: "قويدر يحياوي", role: "الامين العام الوطني", phones: ["0781450423", "0557072815"], email: "Kouidery@ymail.com", image: "https://github.com/hamidibachireduc-png/snte-map-69/blob/main/images/sg_kwaider.jpg?raw=true" },
     { id: "nat_1", name: "احمد رحيمي", role: "الأمين الوطني المكلف بالتنظيم والتنسيق", phones: ["0671276322", "0550549927"], email: "ahmedabdeljabar04@gmail.com", image: "https://github.com/hamidibachireduc-png/snte-map-69/blob/main/images/nat_1.jpg?raw=true" },
@@ -184,43 +293,6 @@ export const InteractiveWilayasMapSection: React.FC = () => {
     "20": { name: "بوسماحة فطيمة", phones: ["0775 28 13 42"], email: "fbousmaha50@gmail.com", hq: "مقابل ثانوية سحنون الراشدي ولاية سعيدة" }
   };
 
-  // خريطة مطابقة رسمية بين ترقيم هياكل SNTE وترقيم قاعدة بيانات GeoAlgeria للولايات الـ 11 المعدلة
-  const SNTE_TO_GEO_CODE: Record<string, number> = {
-    "59": 59, // آفلو (Aflou)
-    "60": 69, // الأبيض سيدي الشيخ (El Abiodh Sidi Cheikh)
-    "61": 63, // العريشة (El Aricha)
-    "62": 61, // القنطرة (El Kantara)
-    "63": 60, // بريكة (Barika)
-    "64": 68, // بوسعادة (Bou Saâda)
-    "65": 62, // بئر العاتر (Bir El Ater)
-    "66": 67, // قصر البخاري (Ksar El Boukhari)
-    "67": 64, // قصر الشلالة (Ksar Chellala)
-    "68": 65, // عين وسارة (Aïn Ouessara)
-    "69": 66, // مسعد (Messaad)
-  };
-
-  const GEO_TO_SNTE_CODE: Record<number, string> = {
-    59: "59",
-    60: "63",
-    61: "62",
-    62: "65",
-    63: "61",
-    64: "67",
-    65: "68",
-    66: "69",
-    67: "66",
-    68: "64",
-    69: "60",
-  };
-
-  const formatPhonesList = (phonesInput: any): string[] => {
-    if (!phonesInput) return [];
-    if (Array.isArray(phonesInput)) {
-      return phonesInput.flatMap((p: string) => String(p).split(/[\/\-,;]+/).map((s) => s.trim())).filter(Boolean);
-    }
-    return String(phonesInput).split(/[\/\-,;]+/).map((s) => s.trim()).filter(Boolean);
-  };
-
   const newWilayasRelations = [
     { id: "59", name: "آفلو", parent_id: "3" },
     { id: "60", name: "الأبيض سيدي الشيخ", parent_id: "32" },
@@ -236,32 +308,14 @@ export const InteractiveWilayasMapSection: React.FC = () => {
   ];
 
   const currentWilaya = WILAYAS_LIST.find((w) => String(w.code) === String(selectedWilayaCode)) || WILAYAS_LIST[16];
-  const currentWilayaRaw = WILAYA_SG_DETAILS[currentWilaya.code] || WILAYA_SG_DETAILS[String(parseInt(currentWilaya.code, 10))] || {
-    name: currentWilaya.sgName,
-    phones: formatPhonesList(currentWilaya.phone),
-    email: currentWilaya.email,
-    hq: currentWilaya.headquarters,
-  };
-  const currentWilayaDetails = {
-    ...currentWilayaRaw,
-    phones: formatPhonesList(currentWilayaRaw.phones || currentWilaya.phone),
-  };
+  const currentWilayaDetails = WILAYA_SG_DETAILS[currentWilaya.code] || { name: currentWilaya.sgName, phones: [currentWilaya.phone], email: currentWilaya.email, hq: currentWilaya.headquarters };
   const parentWilayaRelation = newWilayasRelations.find((r) => String(r.id) === String(selectedWilayaCode));
-
-  const [wilayasGridFilter, setWilayasGridFilter] = useState<'all' | '1-48' | '49-58' | '59-69'>('all');
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.trim();
     setWilayaSearchInput(val);
-    if (!val) return;
-    if (!isNaN(Number(val))) {
+    if (val && !isNaN(Number(val))) {
       const found = WILAYAS_LIST.find((w) => String(w.code) === val || String(w.code).padStart(2, '0') === val.padStart(2, '0'));
-      if (found) {
-        setSelectedWilayaCode(found.code);
-        setActiveTab('wilaya');
-      }
-    } else {
-      const found = WILAYAS_LIST.find((w) => w.name.includes(val) || val.includes(w.name));
       if (found) {
         setSelectedWilayaCode(found.code);
         setActiveTab('wilaya');
@@ -273,33 +327,8 @@ export const InteractiveWilayasMapSection: React.FC = () => {
     setIsWilayaLoginOpen(true);
   };
 
-  const lookupGeoCode = SNTE_TO_GEO_CODE[String(selectedWilayaCode)] || parseInt(String(selectedWilayaCode), 10);
-  const geoWilaya = geo.getWilaya(lookupGeoCode);
-  const geoDairas = geo.getDairasByWilaya(lookupGeoCode) || [];
-  const geoCommunes = geo.getCommunesByWilaya(lookupGeoCode) || [];
-
-  const geoSearchResults = React.useMemo(() => {
-    if (!geoSearchQuery.trim()) return [];
-    const q = geoSearchQuery.trim();
-    let results: any[] = [];
-    if (/^\d{2,5}$/.test(q)) {
-      const byPostal = geo.findByPostalCode(q);
-      if (byPostal && byPostal.length > 0) results = byPostal.slice(0, 30);
-    }
-    if (results.length === 0) {
-      try {
-        const byName = geo.findCommune(q);
-        results = byName.slice(0, 30);
-      } catch {
-        results = [];
-      }
-    }
-    return results;
-  }, [geoSearchQuery]);
-
-  const activeWilayaCommunes = geoCommunes.length > 0 
-    ? geoCommunes 
-    : communesList.filter((c: any) => String(c.wilaya_id) === String(selectedWilayaCode) || String(c.wilaya_id) === String(lookupGeoCode));
+  // تعديل التصفية لتتوافق مع البيانات القادمة من GeoAlgeria
+  const activeWilayaCommunes = communesList.filter((c: any) => String(c.wilaya_id) === String(selectedWilayaCode) || String(c.wilaya_code) === String(selectedWilayaCode));
   const activeNewWilayas = newWilayasRelations.filter((r) => String(r.parent_id) === String(selectedWilayaCode));
 
   return (
@@ -325,11 +354,7 @@ export const InteractiveWilayasMapSection: React.FC = () => {
               </h2>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-emerald-300 font-bold bg-emerald-950/80 px-3 py-1.5 rounded-xl border border-emerald-500/40 flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-emerald-400" />
-              <span>مواقع وحدود الـ 69 ولاية مباشرة</span>
-            </span>
+          <div className="flex items-center gap-2">
             <span className="text-xs text-amber-300 font-bold bg-black/40 px-3.5 py-1.5 rounded-xl border border-amber-400/30">
               منظومة القيادة والتنظيم الميداني
             </span>
@@ -339,289 +364,69 @@ export const InteractiveWilayasMapSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* Left Side: Interactive Map */}
-          <div className={`${isMapExpanded ? 'lg:col-span-12' : 'lg:col-span-6'} bg-white rounded-2xl p-4 shadow-2xl border border-gray-300 flex flex-col text-gray-900 transition-all duration-300`}>
+          <div className="lg:col-span-6 flex flex-col gap-4 text-gray-900 direction-rtl">
             
-            {/* Top Toolbar: Source Mode Switcher & Map Tools */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-b pb-3 mb-3">
-              <div className="flex flex-wrap items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setMapSourceMode('geoalgeria')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    mapSourceMode === 'geoalgeria'
-                      ? 'bg-emerald-700 text-white shadow-sm ring-1 ring-emerald-600'
-                      : 'text-gray-700 hover:text-emerald-800 hover:bg-gray-200'
-                  }`}
-                  title="الخريطة التفاعلية المباشرة لمواقع وحدود الـ 69 ولاية"
+            {/* شريط مفتاح الخريطة */}
+            <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="flex flex-row justify-between items-center p-4 sm:p-5 border-b border-gray-100">
+                <div className="text-right">
+                  <h3 className="text-lg sm:text-xl font-black text-[#00371b]">
+                    الخريطة التفاعلية للجزائر (69 ولاية)
+                  </h3>
+                  <span className="block text-xs sm:text-sm font-medium text-gray-500 mt-0.5">
+                    ملونة حسب المكاتب السبعة للتنسيق الجهوي
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setActiveRegionFilter(null)}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-5 rounded-2xl text-sm transition-all cursor-pointer whitespace-nowrap"
                 >
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>خريطة ومواقع الـ 69 ولاية (تفاعلية)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapSourceMode('snte_vector')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    mapSourceMode === 'snte_vector'
-                      ? 'bg-green-700 text-white shadow-sm ring-1 ring-green-600'
-                      : 'text-gray-700 hover:text-green-800 hover:bg-gray-200'
-                  }`}
-                  title="خريطة التوزيع النقابي لولايات الجزائر"
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>خريطة S.N.T.E المتجهة</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapSourceMode('geo_explorer')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    mapSourceMode === 'geo_explorer'
-                      ? 'bg-blue-700 text-white shadow-sm ring-1 ring-blue-600'
-                      : 'text-gray-700 hover:text-blue-800 hover:bg-gray-200'
-                  }`}
-                  title="مستكشف بيانات الجزائر الجغرافية المفتوحة (البلديات، الدوائر، الرموز البريدية)"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>دليل البلديات والدوائر</span>
+                  عرض كل الجهات (07)
                 </button>
               </div>
 
-              {/* Utility buttons: Expand / Contract */}
-              <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setIsMapExpanded((prev) => !prev)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 border border-gray-300 transition-colors cursor-pointer"
-                  title={isMapExpanded ? 'تصغير العرض' : 'توسيع عرض الخريطة على كامل الصفحة'}
-                >
-                  {isMapExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">{isMapExpanded ? 'تصغير' : 'ملء الشاشة'}</span>
-                </button>
+              <div className="p-4 bg-[#f8fafc] flex flex-wrap justify-center gap-3 sm:gap-4">
+                {regions.map((region) => (
+                  <button
+                    key={region.id}
+                    onClick={() => setActiveRegionFilter(region.id)}
+                    className={`flex items-center gap-2.5 px-4 py-2 rounded-full transition-all duration-200 text-sm font-bold cursor-pointer ${
+                      activeRegionFilter === region.id 
+                        ? 'bg-white shadow-md border border-gray-200 scale-105' 
+                        : 'bg-white hover:bg-gray-50 border border-transparent shadow-sm text-gray-700'
+                    }`}
+                  >
+                    <span 
+                      className="w-3.5 h-3.5 rounded-full" 
+                      style={{ backgroundColor: region.color }}
+                    ></span>
+                    <span className="text-gray-800">{region.name}</span>
+                    <span className="text-gray-400 text-xs font-mono">({region.count})</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Status bar & Current Wilaya */}
-            <div className="flex items-center justify-between mb-2 px-1 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="font-bold text-gray-700 truncate">
-                  {mapSourceMode === 'geoalgeria'
-                    ? 'خريطة الجزائر التفاعلية الرسمية: حدود ومواقع الـ 69 ولاية'
-                    : mapSourceMode === 'geo_explorer'
-                    ? 'مستكشف البيانات الجغرافية المفتوحة (1541 بلدية و 551 دائرة)'
-                    : 'خريطة الجزائر النقابية التخطيطية (69 ولاية)'}
+            <div className="bg-white rounded-2xl p-4 shadow-2xl border border-gray-300 flex flex-col flex-grow">
+              <div className="flex items-center justify-between border-b pb-2 mb-3">
+                <h3 className="text-base font-bold text-green-700">
+                  خريطة الجزائر الإدارية
+                </h3>
+                <span className="text-xs font-bold bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-mono">
+                  ولاية مختارة: {currentWilaya.code} - {currentWilaya.name}
                 </span>
               </div>
-              <span className="text-[11px] font-bold bg-green-100 text-green-900 px-2 py-0.5 rounded-full font-mono shrink-0">
-                ولاية مختارة: {currentWilaya.code} - {currentWilaya.name}
-              </span>
-            </div>
 
-            {/* Map Display Viewport */}
-            <div className={`flex-grow flex items-center justify-center ${isMapExpanded ? 'min-h-[580px] h-[580px]' : 'min-h-[460px] h-[460px]'} bg-slate-900 rounded-xl border border-gray-200 relative overflow-hidden mb-3`}>
-              
-              {mapSourceMode === 'geoalgeria' ? (
-                <div className="w-full h-full relative flex flex-col bg-slate-950">
-                  <AlgeriaWilayasLeafletMap
-                    selectedWilayaCode={selectedWilayaCode}
-                    onSelectWilaya={(code) => {
-                      setSelectedWilayaCode(code);
-                      setActiveTab('wilaya');
-                    }}
-                    className="w-full h-full min-h-[460px]"
-                  />
-                </div>
-              ) : mapSourceMode === 'geo_explorer' ? (
-                /* Mode 3: Local Open Data Explorer from hamidibachireduc-png/mapalgeria */
-                <div className="w-full h-full bg-slate-900 text-slate-100 flex flex-col p-3 overflow-hidden text-right">
-                  {/* Search bar inside explorer */}
-                  <div className="mb-3 bg-slate-800 p-2.5 rounded-xl border border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">🔍</span>
-                      <input
-                        type="text"
-                        value={geoSearchQuery}
-                        onChange={(e) => setGeoSearchQuery(e.target.value)}
-                        placeholder="ابحث في 1541 بلدية و 551 دائرة بالاسم (عربي / فرنسي) أو الرمز البريدي (مثال: عين وسارة، 17000، Alger)..."
-                        className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                      />
-                      {geoSearchQuery && (
-                        <button
-                          onClick={() => setGeoSearchQuery('')}
-                          className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-700 cursor-pointer"
-                        >
-                          مسح
-                        </button>
-                      )}
-                    </div>
+              <div id="snte-svg-map-container" className="flex-grow flex items-center justify-center min-h-[340px] bg-[#f8fafc] rounded-xl p-2 border border-gray-100 relative overflow-hidden mb-4">
+                {isMapLoading ? (
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p className="text-green-700 font-bold text-sm">جاري تحميل خريطة الجزائر...</p>
                   </div>
-
-                  {/* Content: Search results OR Wilaya Deep Details */}
-                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
-                    {geoSearchQuery.trim() ? (
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-slate-300 mb-2 border-b border-slate-800 pb-1">
-                          <span>نتائج البحث المباشرة ({geoSearchResults.length} نتيجة):</span>
-                          <span className="text-[10px] text-emerald-400 font-mono">مستودع: mapalgeria</span>
-                        </div>
-                        {geoSearchResults.length === 0 ? (
-                          <div className="text-center py-8 text-slate-400 text-xs">
-                            لم يتم العثور على بلديات مطابقة لبحثك. جرب كتابة اسم البلدية باللغة العربية أو الفرنسية أو الرمز البريدي.
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {geoSearchResults.map((commune: any, idx: number) => {
-                              const targetCode = GEO_TO_SNTE_CODE[Number(commune.wilaya_code)] || String(commune.wilaya_code).padStart(2, '0');
-                              const parentW = WILAYAS_LIST.find((w) => w.code === targetCode || String(parseInt(w.code, 10)) === String(commune.wilaya_code));
-                              return (
-                                <div
-                                  key={idx}
-                                  className="bg-slate-800/90 border border-slate-700 hover:border-blue-400 p-2.5 rounded-xl transition-colors flex flex-col justify-between"
-                                >
-                                  <div>
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-bold text-white text-xs">{commune.name_ar}</span>
-                                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800">
-                                        {commune.postal_code || '—'}
-                                      </span>
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 flex items-center justify-between mt-1">
-                                      <span>{commune.name_fr}</span>
-                                      <span>الدائرة: {commune.daira || '—'}</span>
-                                    </div>
-                                  </div>
-                                  <div className="mt-2 pt-2 border-t border-slate-700/60 flex items-center justify-between">
-                                    <span className="text-[10px] text-yellow-300 font-bold">
-                                      ولاية {parentW ? `${parentW.name} (${parentW.code})` : commune.wilaya_code}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (parentW) {
-                                          setSelectedWilayaCode(parentW.code);
-                                          setActiveTab('wilaya');
-                                        }
-                                      }}
-                                      className="text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-2 py-0.5 rounded font-bold transition-colors cursor-pointer"
-                                    >
-                                      معاينة الهيكل النقابي ↗
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      /* Selected Wilaya Breakdown from GeoAlgeria */
-                      <div className="space-y-3">
-                        {/* Wilaya Meta Badge Card */}
-                        <div className="bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border border-blue-500/30 p-3 rounded-xl">
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-400/20 pb-2 mb-2">
-                            <div>
-                              <h4 className="text-sm font-black text-white flex items-center gap-2">
-                                <span>ولاية {currentWilaya.name} ({currentWilaya.code})</span>
-                                {geoWilaya?.name_fr && (
-                                  <span className="text-xs font-mono font-normal text-blue-300">/ {geoWilaya.name_fr}</span>
-                                )}
-                              </h4>
-                            </div>
-                            <span className="text-[10px] bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded-full">
-                              سنة الاعتماد: {parseInt(currentWilaya.code, 10) >= 59 ? '2026 (التقسيم الإداري الجديد)' : parseInt(currentWilaya.code, 10) >= 49 ? '2019' : '1984'}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                            <div className="bg-slate-900/80 p-2 rounded border border-slate-700">
-                              <span className="text-slate-400 block text-[10px]">الرمز البريدي الرئيسي:</span>
-                              <span className="font-mono font-bold text-emerald-400">{geoWilaya?.postal_code || `${currentWilaya.code}000`}</span>
-                            </div>
-                            <div className="bg-slate-900/80 p-2 rounded border border-slate-700">
-                              <span className="text-slate-400 block text-[10px]">الرمز الهاتفي:</span>
-                              <span className="font-mono font-bold text-amber-300">{geoWilaya?.phone_code || '—'}</span>
-                            </div>
-                            <div className="bg-slate-900/80 p-2 rounded border border-slate-700">
-                              <span className="text-slate-400 block text-[10px]">عدد الدوائر:</span>
-                              <span className="font-bold text-blue-300">{geoDairas.length} دائرة</span>
-                            </div>
-                            <div className="bg-slate-900/80 p-2 rounded border border-slate-700">
-                              <span className="text-slate-400 block text-[10px]">عدد البلديات:</span>
-                              <span className="font-bold text-emerald-300">{geoCommunes.length} بلدية</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Dairas List */}
-                        {geoDairas.length > 0 && (
-                          <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
-                            <span className="text-[11px] font-bold text-slate-300 block mb-1.5">
-                              🏛️ دوائر ولاية {currentWilaya.name} ({geoDairas.length} دائرة):
-                            </span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {geoDairas.map((d: any, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className="text-[10px] bg-slate-900 text-slate-200 border border-slate-700 px-2 py-0.5 rounded font-bold"
-                                >
-                                  {d.name_ar} {d.name_fr ? <span className="text-slate-400 font-mono font-normal">({d.name_fr})</span> : ''}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Communes List */}
-                        {geoCommunes.length > 0 && (
-                          <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
-                            <span className="text-[11px] font-bold text-slate-300 block mb-1.5">
-                              🏘️ بلديات ولاية {currentWilaya.name} والرموز البريدية ({geoCommunes.length} بلدية):
-                            </span>
-                            <div className="max-h-48 overflow-y-auto custom-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                              {geoCommunes.map((c: any, idx: number) => (
-                                <div
-                                  key={idx}
-                                  className="bg-slate-900/90 p-1.5 rounded border border-slate-800 flex items-center justify-between text-[11px]"
-                                >
-                                  <div>
-                                    <span className="font-bold text-white block">{c.name_ar}</span>
-                                    <span className="text-[10px] text-slate-400 font-mono">{c.name_fr}</span>
-                                  </div>
-                                  <div className="text-left font-mono">
-                                    <span className="text-[10px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-800 block font-bold">
-                                      {c.postal_code || '—'}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Footer credit to GitHub */}
-                  <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                    <span className="text-emerald-400 font-bold">مصدر الخريطة والبيانات: مستودع mapalgeria المعتمد</span>
-                    <a
-                      href="https://github.com/hamidibachireduc-png/mapalgeria"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-1 font-mono font-bold"
-                    >
-                      github.com/hamidibachireduc-png/mapalgeria ↗
-                    </a>
-                  </div>
-                </div>
-              ) : isMapLoading ? (
-                <div className="flex flex-col items-center justify-center text-center p-6 text-white">
-                  <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                  <p className="text-green-400 font-bold text-sm">جاري تحميل خريطة الهياكل النقابية...</p>
-                </div>
-              ) : svgMapHtml ? (
-                <div className="w-full h-full flex flex-col items-center justify-between p-2 relative overflow-hidden bg-slate-900">
+                ) : svgMapHtml ? (
                   <div
-                    className="w-full flex-1 flex items-center justify-center [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[350px] [&>svg_path]:fill-slate-700 [&>svg_path]:stroke-slate-500 [&>svg_path]:cursor-pointer [&>svg_path:hover]:fill-emerald-500 p-2"
-                    dangerouslySetInnerHTML={{ __html: svgMapHtml }}
+                    className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[380px]"
+                    dangerouslySetInnerHTML={{ __html: svgMapHtml.replace(/<path([^>]*)fill="[^"]*"([^>]*)>/g, '<path$1$2>') }}
                     onClick={(e: any) => {
                       const target = e.target;
                       if (target && target.tagName === 'path') {
@@ -634,226 +439,92 @@ export const InteractiveWilayasMapSection: React.FC = () => {
                             if (found) {
                               setSelectedWilayaCode(found.code);
                               setActiveTab('wilaya');
+                              
+                              // تحديد بصري للولاية التي تم النقر عليها
+                              Array.from(target.parentNode.children).forEach((child: any) => {
+                                if (child.tagName === 'path') {
+                                    child.style.stroke = '#ffffff';
+                                    child.style.strokeWidth = '1.2';
+                                }
+                              });
+                              target.style.stroke = '#000000'; // حدود سوداء للولاية النشطة
+                              target.style.strokeWidth = '2';
                             }
                           }
                         }
                       }
                     }}
                   />
+                ) : null}
+              </div>
 
-                  {/* Interactive Bar for Modified Wilayas 59-69 in SVG mode */}
-                  <div className="w-full bg-slate-800/95 border-t border-amber-500/30 p-2 rounded-xl flex flex-col gap-1.5 z-10 shadow-lg">
-                    <div className="flex items-center justify-between text-[11px] text-amber-300 font-bold px-1">
-                      <span className="flex items-center gap-1">
-                        <span>✨</span>
-                        <span>الولايات المعدلة والمستحدثة (59 إلى 69) - انقر للتحديد التفاعلي:</span>
-                      </span>
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center justify-between">
+                  <span>⚡ اختيار دقيق لولايات الجزائر (من 01 إلى 69):</span>
+                  <span className="text-[10px] text-gray-500">انقر للتبديل الفوري</span>
+                </label>
+                <div className="max-h-36 overflow-y-auto custom-scrollbar bg-gray-50 p-2 rounded-xl border grid grid-cols-3 sm:grid-cols-4 gap-1.5 text-right">
+                  {WILAYAS_LIST.map((w) => {
+                    const isSelected = w.code === selectedWilayaCode;
+                    return (
                       <button
+                        key={w.code}
                         type="button"
-                        onClick={() => setMapSourceMode('geoalgeria')}
-                        className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer"
+                        onClick={() => {
+                          setSelectedWilayaCode(w.code);
+                          setActiveTab('wilaya');
+                        }}
+                        className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer truncate flex items-center justify-between px-2 ${
+                          isSelected
+                            ? 'bg-green-700 text-white shadow-md scale-102'
+                            : 'bg-white hover:bg-green-50 text-gray-800 border border-gray-200'
+                        }`}
+                        title={`${w.code} - ${w.name}`}
                       >
-                        عرض الخريطة التفاعلية الكاملة (Leaflet) ←
+                        <span className="truncate">{w.name}</span>
+                        <span className={`text-[10px] font-mono px-1 rounded ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-gray-100 text-gray-600'}`}>
+                          {w.code}
+                        </span>
                       </button>
-                    </div>
-                    <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
-                      {newWilayasRelations.map((nw) => {
-                        const isSelected = selectedWilayaCode === nw.id;
-                        return (
-                          <button
-                            key={nw.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedWilayaCode(nw.id);
-                              setActiveTab('wilaya');
-                            }}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                              isSelected
-                                ? 'bg-amber-400 text-slate-950 font-black shadow-md ring-2 ring-white scale-105'
-                                : 'bg-slate-700/80 text-amber-200 hover:bg-amber-500/20 hover:text-white border border-amber-500/30'
-                            }`}
-                          >
-                            <span className="font-mono font-black">{nw.id}</span>
-                            <span>{nw.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
-              ) : (
-                <div className="w-full h-full relative flex flex-col bg-slate-950">
-                  <AlgeriaWilayasLeafletMap
-                    selectedWilayaCode={selectedWilayaCode}
-                    onSelectWilaya={(code) => {
-                      setSelectedWilayaCode(code);
-                      setActiveTab('wilaya');
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">الجهة:</label>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value !== 'all') {
+                        setSelectedRegionName(e.target.value);
+                        setActiveTab('regional');
+                      } else {
+                        setActiveTab('national');
+                      }
                     }}
-                    className="w-full h-full min-h-[460px]"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold focus:ring-green-500 bg-gray-50 cursor-pointer"
+                  >
+                    <option value="all">التنظيم الوطني (المكتب / المستشارون / الحكماء)</option>
+                    <option value="الشرق">الشرق</option>
+                    <option value="الغرب">الغرب</option>
+                    <option value="الوسط 01">الوسط 01</option>
+                    <option value="الوسط 02">الوسط 02</option>
+                    <option value="جنوب الوسط">جنوب الوسط</option>
+                    <option value="الجنوب الشرقي">الجنوب الشرقي</option>
+                    <option value="الجنوب الغربي">الجنوب الغربي</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">بحث برقم الولاية:</label>
+                  <input
+                    type="number"
+                    value={wilayaSearchInput}
+                    onChange={handleSearchChange}
+                    placeholder="مثال: 17 أو 69"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-mono font-bold focus:ring-green-500 bg-gray-50"
                   />
                 </div>
-              )}
-            </div>
-
-            {/* Quick Geo Information Bar */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 mb-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                  {currentWilaya.code}
-                </span>
-                <div>
-                  <span className="font-black text-gray-900 block">
-                    ولاية {currentWilaya.name}
-                  </span>
-                  <span className="text-[10px] text-gray-600 block">
-                    {currentWilaya.regionalCoordinator ? `المنطقة الجهوية: ${currentWilaya.regionalCoordinator}` : 'التقسيم الإداري الرسمي (69 ولاية)'}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMapSourceMode('geoalgeria');
-                  }}
-                  className="bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-[11px] transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
-                  title="عرض موقع وحدود الولاية على الخريطة التفاعلية"
-                >
-                  <MapPin className="w-3 h-3 text-emerald-600" />
-                  <span>معاينة على الخريطة التفاعلية</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 69 Wilayas Grid selector */}
-            <div className="mb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
-                <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-                  <span>⚡ اختيار دقيق لولايات الجزائر (من 01 إلى 69):</span>
-                </label>
-                <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-[10px]">
-                  <button
-                    type="button"
-                    onClick={() => setWilayasGridFilter('all')}
-                    className={`px-2 py-0.5 rounded font-bold transition-all cursor-pointer ${
-                      wilayasGridFilter === 'all' ? 'bg-green-700 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    الكل (69)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWilayasGridFilter('1-48')}
-                    className={`px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer ${
-                      wilayasGridFilter === '1-48' ? 'bg-green-700 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    1 - 48
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWilayasGridFilter('49-58')}
-                    className={`px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer ${
-                      wilayasGridFilter === '49-58' ? 'bg-green-700 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    49 - 58
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWilayasGridFilter('59-69')}
-                    className={`px-2 py-0.5 rounded font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                      wilayasGridFilter === '59-69'
-                        ? 'bg-amber-400 text-slate-950 font-black shadow-xs ring-1 ring-amber-600'
-                        : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
-                    }`}
-                  >
-                    <span>✨</span>
-                    <span>الولايات المعدلة (59-69)</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="max-h-36 overflow-y-auto custom-scrollbar bg-gray-50 p-2 rounded-xl border grid grid-cols-3 sm:grid-cols-4 gap-1.5 text-right">
-                {WILAYAS_LIST.filter((w) => {
-                  const codeNum = parseInt(w.code, 10);
-                  if (isNaN(codeNum)) return wilayasGridFilter === 'all';
-                  if (wilayasGridFilter === '1-48') return codeNum >= 1 && codeNum <= 48;
-                  if (wilayasGridFilter === '49-58') return codeNum >= 49 && codeNum <= 58;
-                  if (wilayasGridFilter === '59-69') return codeNum >= 59 && codeNum <= 69;
-                  return true;
-                }).map((w) => {
-                  const isSelected = w.code === selectedWilayaCode;
-                  const isModified = parseInt(w.code, 10) >= 59 && parseInt(w.code, 10) <= 69;
-                  return (
-                    <button
-                      key={w.code}
-                      type="button"
-                      onClick={() => {
-                        setSelectedWilayaCode(w.code);
-                        setActiveTab('wilaya');
-                      }}
-                      className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer truncate flex items-center justify-between px-2 ${
-                        isSelected
-                          ? 'bg-green-700 text-white shadow-md scale-102 ring-2 ring-amber-400'
-                          : isModified
-                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300'
-                          : 'bg-white hover:bg-green-50 text-gray-800 border border-gray-200'
-                      }`}
-                      title={`${w.code} - ${w.name}${isModified ? ' (ولاية معدلة/مستحدثة)' : ''}`}
-                    >
-                      <span className="truncate flex items-center gap-1">
-                        {isModified && <span className="text-amber-600 text-[10px]">✨</span>}
-                        <span>{w.name}</span>
-                      </span>
-                      <span className={`text-[10px] font-mono px-1 rounded ${
-                        isSelected 
-                          ? 'bg-amber-400 text-slate-950 font-black' 
-                          : isModified 
-                          ? 'bg-amber-200 text-amber-950 font-bold' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {w.code}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">الجهة:</label>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value !== 'all') {
-                      setSelectedRegionName(e.target.value);
-                      setActiveTab('regional');
-                    } else {
-                      setActiveTab('national');
-                    }
-                  }}
-                  className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold focus:ring-green-500 bg-gray-50 cursor-pointer"
-                >
-                  <option value="all">التنظيم الوطني (المكتب / المستشارون / الحكماء)</option>
-                  <option value="الشرق">الشرق</option>
-                  <option value="الغرب">الغرب</option>
-                  <option value="الوسط 01">الوسط 01</option>
-                  <option value="الوسط 02">الوسط 02</option>
-                  <option value="جنوب الوسط">جنوب الوسط</option>
-                  <option value="الجنوب الشرقي">الجنوب الشرقي</option>
-                  <option value="الجنوب الغربي">الجنوب الغربي</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">بحث برقم أو اسم الولاية:</label>
-                <input
-                  type="text"
-                  value={wilayaSearchInput}
-                  onChange={handleSearchChange}
-                  placeholder="مثال: 17 أو 64 أو بوسعادة أو مسعد"
-                  className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold focus:ring-green-500 bg-gray-50"
-                />
               </div>
             </div>
           </div>
@@ -1060,128 +731,74 @@ export const InteractiveWilayasMapSection: React.FC = () => {
               {/* Tab 4: Regional Secretariat */}
               {activeTab === 'regional' && (
                 <div className="space-y-4">
-                  <div className="bg-emerald-700 text-white p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">🌐</span>
-                      <span className="font-bold text-sm">التنسيق الجهوي: <span className="text-yellow-300 font-black text-base">{selectedRegionName}</span></span>
-                    </div>
-                    <span className="text-[11px] bg-emerald-800/80 px-2.5 py-1 rounded-full text-emerald-100 border border-emerald-600/50">
-                      7 أمانات جهوية عبر القطر الوطني
-                    </span>
-                  </div>
-
-                  {/* أزرار التنقل السريع بين الأمانات الجهوية السبع */}
-                  <div className="bg-gray-50 border border-gray-200 p-2.5 rounded-xl">
-                    <span className="text-[11px] font-bold text-gray-500 block mb-1.5">اختر الأمانة الجهوية للمعاينة:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {Object.keys(regionalData).map((regionKey) => (
-                        <button
-                          key={regionKey}
-                          onClick={() => setSelectedRegionName(regionKey)}
-                          className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                            selectedRegionName === regionKey
-                              ? 'bg-emerald-700 text-white shadow-md scale-102 ring-2 ring-emerald-400'
-                              : 'bg-white hover:bg-emerald-50 text-gray-700 border border-gray-200'
-                          }`}
-                        >
-                          {regionKey}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="bg-emerald-700 text-white p-3 rounded-xl flex items-center justify-between">
+                    <span className="font-bold text-sm">التنسيق الجهوي: <span className="text-yellow-300 font-black">{selectedRegionName}</span></span>
                   </div>
 
                   {regionalData[selectedRegionName] && (
                     <div className="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-xl shadow-sm space-y-3">
-                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-right">
-                        <div className="w-20 h-20 rounded-full border-3 border-emerald-400 bg-white overflow-hidden shrink-0 shadow-md">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-full border-2 border-emerald-400 bg-white overflow-hidden shrink-0 shadow-inner">
                           <img
-                            src={getImageUrl(regionalData[selectedRegionName].coordinator.image)}
+                            src={`${GITHUB_IMAGES_BASE}${regionalData[selectedRegionName].coordinator.image || 'rm_1'}.jpg`}
                             onError={(e: any) => { e.target.src = 'https://l.top4top.io/p_37988hwfa0.png'; }}
                             alt="المنسق الجهوي"
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <div className="flex-1">
-                          <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded inline-block">
+                        <div>
+                          <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                             المنسق الجهوي المعتمد
                           </span>
-                          <h4 className="text-base sm:text-lg font-black text-gray-900 mt-1">
+                          <h4 className="text-base font-black text-gray-900 mt-1">
                             {regionalData[selectedRegionName].coordinator.name}
                           </h4>
-                          <p className="text-xs text-gray-600 mt-0.5">
+                          <p className="text-xs text-gray-600">
                             ولاية الإقامة: <strong className="text-emerald-800">{regionalData[selectedRegionName].coordinator.wilaya}</strong>
                           </p>
-                          {regionalData[selectedRegionName].coordinator.email && (
-                            <a
-                              href={`mailto:${regionalData[selectedRegionName].coordinator.email}`}
-                              className="text-xs text-blue-600 hover:underline mt-1 inline-block font-mono"
-                            >
-                              📧 {regionalData[selectedRegionName].coordinator.email}
-                            </a>
-                          )}
                         </div>
                       </div>
                       
-                      <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-emerald-100" dir="ltr">
+                      <div className="flex flex-col gap-2 mt-2" dir="ltr">
                           {regionalData[selectedRegionName].coordinator.phones.map((phone: string, i: number) => (
-                             <div key={i} className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-xs">
+                             <div key={i} className="flex items-center justify-end md:justify-start gap-2 bg-white px-2 py-1.5 rounded border w-max">
                                 <span className="font-bold text-gray-800 font-mono text-xs">{phone}</span>
-                                <a href={`tel:${phone}`} className="text-blue-600 hover:underline text-xs font-bold">📞 اتصال</a>
+                                <a href={`tel:${phone}`} className="text-blue-600 hover:underline text-xs">📞 اتصال</a>
                                 <span className="text-gray-300">|</span>
-                                <a href={getWhatsAppLink(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline text-xs font-bold">💬 واتساب</a>
+                                <a href={getWhatsAppLink(phone)} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline text-xs">💬 واتساب</a>
                              </div>
                           ))}
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-emerald-200">
                         <span className="text-xs font-bold text-gray-700 block mb-2">أعضاء الأمانة الجهوية:</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           {regionalData[selectedRegionName].members.map((m: any, i: number) => (
-                            <div key={i} className="bg-white p-3 rounded-lg border border-emerald-200 flex items-center justify-between shadow-xs">
-                              <div className="flex items-center gap-2.5">
+                            <div key={i} className="bg-white p-2.5 rounded-lg border border-emerald-200 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
                                 <img 
-                                  src={getImageUrl(m.image)}
+                                  src={`${GITHUB_IMAGES_BASE}${m.image || 'rm_1'}.jpg`}
                                   onError={(e: any) => { e.target.src = 'https://l.top4top.io/p_37988hwfa0.png'; }}
                                   alt={m.name}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-emerald-300 shrink-0"
+                                  className="w-8 h-8 rounded-full object-cover border border-gray-200"
                                 />
                                 <div>
                                   <span className="font-bold text-gray-900 text-xs block">{m.name}</span>
-                                  <span className="text-[10px] text-emerald-700 font-semibold block">ولاية {m.wilaya}</span>
+                                  <span className="text-[10px] text-gray-500 block">ولاية {m.wilaya}</span>
                                 </div>
                               </div>
                               <div className="flex flex-col gap-1 items-end">
                                  {m.phones.map((p: string, idx: number) => (
-                                     <div key={idx} className="flex items-center gap-1.5 text-[10px] font-mono bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200">
+                                     <div key={idx} className="flex items-center gap-2 text-[10px] font-mono">
                                         <span className="font-bold text-gray-800">{p}</span>
-                                        <a href={`tel:${p}`} className="text-blue-500" title="اتصال">📞</a>
-                                        <a href={getWhatsAppLink(p)} target="_blank" rel="noopener noreferrer" className="text-green-500" title="واتساب">💬</a>
+                                        <div className="flex gap-1">
+                                          <a href={`tel:${p}`} className="text-blue-500">📞</a>
+                                          <a href={getWhatsAppLink(p)} target="_blank" rel="noopener noreferrer" className="text-green-500">💬</a>
+                                        </div>
                                      </div>
                                  ))}
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* الولايات التابعة لهذه الأمانة الجهوية */}
-                      <div className="mt-3 pt-3 border-t border-emerald-200">
-                        <span className="text-xs font-bold text-gray-700 block mb-1.5">
-                          🏛️ الولايات التابعة لهذا النطاق الجهوي (انقر للانتقال للولاية):
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {WILAYAS_LIST.filter(w => w.regionalCoordinator && w.regionalCoordinator.includes(selectedRegionName)).map((w) => (
-                            <button
-                              key={w.code}
-                              onClick={() => {
-                                setSelectedWilayaCode(w.code);
-                                setActiveTab('wilaya');
-                              }}
-                              className="bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-xs px-2 py-1 rounded-md font-bold cursor-pointer transition-colors flex items-center gap-1 shadow-xs"
-                            >
-                              <span>{w.name}</span>
-                              <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-1 rounded">({w.code})</span>
-                            </button>
                           ))}
                         </div>
                       </div>
@@ -1194,31 +811,14 @@ export const InteractiveWilayasMapSection: React.FC = () => {
               {activeTab === 'wilaya' && (
                 <div className="space-y-4">
                   
-                  {/* أزرار العودة الذكية والتنقل */}
-                  <div className="flex flex-wrap items-center gap-2 pb-2">
+                  {/* أزرار العودة الذكية */}
+                  <div className="flex items-center gap-2 pb-2">
                     <button 
                       onClick={() => setActiveTab('national')} 
                       className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors border border-gray-200"
                     >
                       <span>🔙</span> العودة للمكتب الوطني
                     </button>
-
-                    {currentWilaya.regionalCoordinator && (
-                      <button 
-                        onClick={() => {
-                          const regKeys = Object.keys(regionalData);
-                          const foundReg = regKeys.find(k => currentWilaya.regionalCoordinator.includes(k));
-                          if (foundReg) {
-                            setSelectedRegionName(foundReg);
-                          }
-                          setActiveTab('regional');
-                        }}
-                        className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors border border-emerald-300"
-                        title="عرض الأمانة الجهوية التابعة لها هذه الولاية"
-                      >
-                        <span>🌐</span> الأمانة الجهوية: {currentWilaya.regionalCoordinator}
-                      </button>
-                    )}
                     
                     {parentWilayaRelation && (
                       <button 
@@ -1302,28 +902,16 @@ export const InteractiveWilayasMapSection: React.FC = () => {
 
                     {activeWilayaCommunes.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-blue-200">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-bold text-gray-700">
-                            🏛️ البلديات التابعة ({activeWilayaCommunes.length} بلدية):
-                          </span>
-                          <span className="text-[10px] text-emerald-700 font-mono font-bold">
-                            بيانات معتمدة: mapalgeria
-                          </span>
-                        </div>
+                        <span className="text-xs font-bold text-gray-700 block mb-1.5">
+                          🏛️ البلديات التابعة ({activeWilayaCommunes.length} بلدية):
+                        </span>
                         <div className="max-h-36 overflow-y-auto custom-scrollbar bg-white p-2 rounded-lg border grid grid-cols-2 gap-1.5 text-right text-xs">
                           {activeWilayaCommunes.map((c: any, i: number) => (
-                            <div key={i} className="p-1.5 bg-gray-50 rounded border border-gray-100 flex flex-col justify-between">
-                              <div className="flex items-center justify-between">
-                                <span className="font-bold text-green-800">{c.name_ar || c.name}</span>
-                                {c.postal_code && (
-                                  <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-200">
-                                    {c.postal_code}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-gray-500 truncate">
-                                {c.daira ? `دائرة: ${c.daira}` : c.daira_ar ? `دائرة: ${c.daira_ar}` : c.name_fr || ''}
-                              </span>
+                            <div key={i} className="p-1.5 bg-gray-50 rounded border border-gray-100">
+                              <span className="font-bold text-green-800 block">{c.name_ar || c.name}</span>
+                              {(c.daira_ar || c.daira_name_ar) && (
+                                <span className="text-[10px] text-gray-500">دائرة: {c.daira_ar || c.daira_name_ar}</span>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1331,38 +919,14 @@ export const InteractiveWilayasMapSection: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="pt-2 flex flex-col sm:flex-row gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMapSourceMode('geo_explorer');
-                        const el = document.getElementById('interactive-map-section');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-2.5 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 text-xs border border-blue-500"
-                    >
-                      <Compass className="w-3.5 h-3.5 text-blue-200" />
-                      <span>مستكشف بيانات {currentWilaya.name}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMapSourceMode('geoalgeria');
-                        const el = document.getElementById('interactive-map-section');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-2.5 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 text-xs border border-emerald-500"
-                    >
-                      <Globe className="w-3.5 h-3.5 text-emerald-200" />
-                      <span>أطلس GeoAlgeria</span>
-                    </button>
+                  <div className="pt-2">
                     <button
                       type="button"
                       onClick={handleWilayaSGIngress}
-                      className="flex-1 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black py-2 px-2.5 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 border-2 border-amber-300 text-xs"
+                      className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black py-3 px-4 rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 border-2 border-amber-300 text-xs sm:text-sm"
                     >
                       <span>🔑</span>
-                      <span>دخول الأمين الولائي</span>
+                      <span>دخول بصلاحية الأمين العام الولائي - ولاية {currentWilaya.name}</span>
                     </button>
                   </div>
                 </div>
