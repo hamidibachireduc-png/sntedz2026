@@ -80,6 +80,14 @@ export const TopAuthBar: React.FC = () => {
       currentUser.level === 'wilaya' ||
       currentUser.level === 'coordinator');
 
+  const canUseDocumentStamp = [
+    'NATIONAL_SG',
+    'WILAYA_SG',
+    'MUNICIPAL_SG',
+    'BRANCH_SG',
+    'SCHOOL_SG',
+  ].includes(currentUser?.role);
+
   const loadRequestsCount = () => {
     try {
       const raw = localStorage.getItem('snte_publication_requests_v1');
@@ -749,14 +757,16 @@ export const TopAuthBar: React.FC = () => {
             <span>الاجتماع المباشر</span>
           </button>
 
-          <a
-            href="./snte-document-stamp.html"
-            className="bg-[#c5a059] hover:bg-amber-500 text-emerald-950 px-3.5 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 border border-amber-300 shadow-md transition-all cursor-pointer"
-            title="إنشاء بصمة QR ودمجها على الوثائق النقابية"
-          >
-            <span>🔏</span>
-            <span>توثيق الوثائق</span>
-          </a>
+          {canUseDocumentStamp && (
+            <a
+              href="./snte-document-stamp.html"
+              className="bg-[#c5a059] hover:bg-amber-500 text-emerald-950 px-3.5 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 border border-amber-300 shadow-md transition-all cursor-pointer"
+              title="إنشاء بصمة QR ودمجها على الوثائق النقابية"
+            >
+              <span>🔏</span>
+              <span>توثيق الوثائق</span>
+            </a>
+          )}
         </div>
       </div>
 
