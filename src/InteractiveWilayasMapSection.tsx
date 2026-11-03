@@ -306,7 +306,7 @@ export const InteractiveWilayasMapSection: React.FC = () => {
     <section
       id="interactive-map-section"
       aria-label="الخريطة التفاعلية للجزائر وتوزيع الأمانات الولائية"
-      className="bg-gradient-to-br from-[#002b14] via-[#00381b] to-[#002b14] text-white py-12 px-3 sm:px-6 lg:px-8 border-b-4 border-amber-400 font-['Cairo',sans-serif] relative overflow-hidden"
+      className="isolate bg-gradient-to-br from-[#002b14] via-[#00381b] to-[#002b14] text-white py-12 px-3 sm:px-6 lg:px-8 border-b-4 border-amber-400 font-['Cairo',sans-serif] relative overflow-hidden"
     >
       <div className="max-w-7xl mx-auto space-y-6">
         
