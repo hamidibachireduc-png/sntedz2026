@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
+import { firebaseConfig } from './firebaseConfig';
 import {
   getAuth,
   signInWithPopup,
@@ -17,15 +18,6 @@ import {
 // ============================================================================
 // 1. إعدادات Firebase ودوال المزامنة مع Google Drive & Sheets
 // ============================================================================
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBS7XsliuZ-ckNo4xWDn4ynsPxOnWdsmwM",
-  authDomain: "sntedz2022.firebaseapp.com",
-  projectId: "sntedz2022",
-  storageBucket: "sntedz2022.firebasestorage.app",
-  messagingSenderId: "527050734664",
-  appId: "1:527050734664:web:c95b2116fd388b25b9ec7d"
-};
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const auth = getAuth(app);

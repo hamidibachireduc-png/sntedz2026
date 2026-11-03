@@ -18,6 +18,7 @@ import { UnionStatutesModal } from './UnionStatutesModal';
 import { ContactSupportComponent } from './ContactSupportComponent';
 import { DigitalPlatformsModal } from './DigitalPlatformsModal';
 import { GitHubExportModal } from './GitHubExportModal';
+import { PrivateMessagesModal } from './PrivateMessagesModal';
 import {
   SnteNotification,
   generateDynamicNotifications,
@@ -53,6 +54,7 @@ export const TopAuthBar: React.FC = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isPlatformsModalOpen, setIsPlatformsModalOpen] = useState(false);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+  const [isPrivateMessagesOpen, setIsPrivateMessagesOpen] = useState(false);
   const [notifications, setNotifications] = useState<SnteNotification[]>([]);
   const [toastNotification, setToastNotification] = useState<SnteNotification | null>(null);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
@@ -386,6 +388,15 @@ export const TopAuthBar: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
+                  onClick={() => setIsPrivateMessagesOpen(true)}
+                  className="bg-indigo-700 hover:bg-indigo-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-400"
+                  title="إرسال واستقبال رسائل خاصة"
+                >
+                  <span>✉️</span>
+                  <span>الرسائل الخاصة</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsReviewModalOpen(true)}
                   className="bg-amber-500 hover:bg-amber-400 text-emerald-950 font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-amber-300"
                   title="مراجعة طلبات الترخيص والتفويض الواردة من الأمناء العامين والمنسقين"
@@ -434,6 +445,17 @@ export const TopAuthBar: React.FC = () => {
               </div>
             ) : isWilayaOrRegionalSG ? (
               <div className="flex items-center gap-1.5">
+                {currentUser?.role === 'WILAYA_SG' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPrivateMessagesOpen(true)}
+                    className="bg-indigo-700 hover:bg-indigo-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-400"
+                    title="عرض الرسائل الخاصة الواردة من الأمانة الوطنية"
+                  >
+                    <span>✉️</span>
+                    <span>الرسائل الخاصة</span>
+                  </button>
+                )}
                 {(currentUser?.role === 'GENERAL_COORDINATOR' || currentUser?.level === 'coordinator') && (
                   <button
                     type="button"
@@ -950,6 +972,11 @@ export const TopAuthBar: React.FC = () => {
       <VirtualMeetingModal isOpen={isMeetingOpen} onClose={() => setIsMeetingOpen(false)} />
 
       <ContactSupportComponent isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+
+      <PrivateMessagesModal
+        isOpen={isPrivateMessagesOpen}
+        onClose={() => setIsPrivateMessagesOpen(false)}
+      />
 
       {toastNotification && (
         <aside

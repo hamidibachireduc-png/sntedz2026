@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function accountPath(uid) {
+      return /databases/$(database)/documents/messageAccounts/$(uid);
+    }
+
+    function isNationalSecretary() {
+      return signedIn()
+        && exists(accountPath(request.auth.uid))
+        && get(accountPath(request.auth.uid)).data.role == 'NATIONAL_SG'
+        && get(accountPath(request.auth.uid)).data.email == request.auth.token.email
+        && request.auth.token.email_verified == true;
+    }
+
+    function isWilayaSecretary(uid, wilayaCode) {
+      return exists(accountPath(uid))
+        && get(accountPath(uid)).data.role == 'WILAYA_SG'
+        && get(accountPath(uid)).data.wilayaCode == wilayaCode;
+    }
+
+    match /messageAccounts/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isNationalSecretary());
+      allow write: if false;
+    }
+
+    match /privateMessages/{messageId} {
+      allow create: if isNationalSecretary()
+        && request.resource.data.keys().hasAll([
+          'senderUid', 'senderName', 'recipientUid', 'recipientName',
+          'recipientWilayaCode', 'subject', 'body', 'createdAt', 'readAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'senderUid', 'senderName', 'recipientUid', 'recipientName',
+          'recipientWilayaCode', 'subject', 'body', 'createdAt', 'readAt'
+        ])
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderName is string
+        && request.resource.data.senderName.size() > 0
+        && request.resource.data.senderName == get(accountPath(request.auth.uid)).data.name
+        && request.resource.data.recipientUid is string
+        && request.resource.data.recipientName is string
+        && request.resource.data.recipientName.size() > 0
+        && request.resource.data.recipientWilayaCode is string
+        && request.resource.data.recipientWilayaCode.size() > 0
+        && isWilayaSecretary(
+          request.resource.data.recipientUid,
+          request.resource.data.recipientWilayaCode
+        )
+        && request.resource.data.recipientName
+          == get(accountPath(request.resource.data.recipientUid)).data.name
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() > 0
+        && request.resource.data.subject.size() <= 160
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 10000
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.readAt == null;
+
+      allow read: if signedIn()
+        && (request.auth.uid == resource.data.senderUid
+          || request.auth.uid == resource.data.recipientUid);
+
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.recipientUid
+        && resource.data.readAt == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt'])
+        && request.resource.data.readAt is timestamp;
+
+      allow delete: if false;
+    }
+  }
+}
