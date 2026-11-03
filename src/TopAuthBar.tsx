@@ -213,6 +213,17 @@ export const TopAuthBar: React.FC = () => {
     const handleOpenNotifications = () => setIsNotificationsModalOpen(true);
     const handleOpenStatus = () => setIsStatusModalOpen(true);
     const handleNotifsUpdate = () => loadNotifications(false);
+    const handleMembersUpdated = () => {
+      refreshUser();
+      loadPendingMembersCount();
+      loadNotifications(false);
+    };
+    const handleStorage = () => {
+      refreshUser();
+      loadRequestsCount();
+      loadPendingMembersCount();
+      loadNotifications(false);
+    };
     const handleMemberRegistered = () => {
       refreshUser();
       loadPendingMembersCount();
@@ -235,18 +246,9 @@ export const TopAuthBar: React.FC = () => {
     window.addEventListener('snte-open-github-modal', handleOpenGitHubModal);
     window.addEventListener('snte-notifications-updated', handleNotifsUpdate);
     window.addEventListener('snte-topic-published', loadRequestsCount);
-    window.addEventListener('snte-members-updated', () => {
-      refreshUser();
-      loadPendingMembersCount();
-      loadNotifications(false);
-    });
+    window.addEventListener('snte-members-updated', handleMembersUpdated);
     window.addEventListener('snte-member-registered', handleMemberRegistered);
-    window.addEventListener('storage', () => {
-      refreshUser();
-      loadRequestsCount();
-      loadPendingMembersCount();
-      loadNotifications(false);
-    });
+    window.addEventListener('storage', handleStorage);
 
     (window as any).openSnteLogin = handleOpenLogin;
     (window as any).openSnteRegister = handleOpenRegister;
@@ -280,10 +282,26 @@ export const TopAuthBar: React.FC = () => {
       window.removeEventListener('snte-open-notifications', handleOpenNotifications);
       window.removeEventListener('snte-open-membership-status', handleOpenStatus);
       window.removeEventListener('snte-open-contact', handleOpenContact);
+      window.removeEventListener('snte-open-digital-platforms', handleOpenDigitalPlatforms);
+      window.removeEventListener('snte-open-github-modal', handleOpenGitHubModal);
       window.removeEventListener('snte-notifications-updated', handleNotifsUpdate);
       window.removeEventListener('snte-topic-published', loadRequestsCount);
+      window.removeEventListener('snte-members-updated', handleMembersUpdated);
       window.removeEventListener('snte-member-registered', handleMemberRegistered);
+      window.removeEventListener('storage', handleStorage);
       document.removeEventListener('mousedown', handleClickOutside);
+
+      const globalHandlers = window as any;
+      if (globalHandlers.openSnteLogin === handleOpenLogin) delete globalHandlers.openSnteLogin;
+      if (globalHandlers.openSnteRegister === handleOpenRegister) delete globalHandlers.openSnteRegister;
+      if (globalHandlers.openSnteCard === handleOpenCard) delete globalHandlers.openSnteCard;
+      if (globalHandlers.openSntePendingMembers === handleOpenPendingMembers) delete globalHandlers.openSntePendingMembers;
+      if (globalHandlers.openSnteHierarchy === handleOpenHierarchy) delete globalHandlers.openSnteHierarchy;
+      if (globalHandlers.openSnteNotifications === handleOpenNotifications) delete globalHandlers.openSnteNotifications;
+      if (globalHandlers.openSnteMembershipStatus === handleOpenStatus) delete globalHandlers.openSnteMembershipStatus;
+      if (globalHandlers.openContactSupport === handleOpenContact) delete globalHandlers.openContactSupport;
+      if (globalHandlers.openDigitalPlatforms === handleOpenDigitalPlatforms) delete globalHandlers.openDigitalPlatforms;
+      if (globalHandlers.openGitHubModal === handleOpenGitHubModal) delete globalHandlers.openGitHubModal;
     };
   }, []);
 

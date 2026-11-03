@@ -31,8 +31,8 @@ export const AlgeriaWilayasLeafletMap: React.FC<AlgeriaWilayasLeafletMapProps> =
   useEffect(() => {
     let isMounted = true;
     Promise.all([
-      fetch('/data/wilaya-boundaries.json').then((res) => (res.ok ? res.json() : null)).catch(() => null),
-      fetch('/data/wilayas.json').then((res) => (res.ok ? res.json() : null)).catch(() => null),
+      fetch(`${import.meta.env.BASE_URL}data/wilaya-boundaries.json`).then((res) => (res.ok ? res.json() : null)).catch(() => null),
+      fetch(`${import.meta.env.BASE_URL}data/wilayas.json`).then((res) => (res.ok ? res.json() : null)).catch(() => null),
     ]).then(async ([boundaries, points]) => {
       if (!isMounted) return;
       // Fallback directly to user's repository if local files are missing
