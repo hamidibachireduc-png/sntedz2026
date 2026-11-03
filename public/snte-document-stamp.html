@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#064b2c">
+  <title>توثيق الوثائق النقابية | SNTE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
+  <style>
+    :root{font-family:'Cairo',sans-serif;color:#14251c;background:#eef3ed;font-synthesis:none;text-rendering:optimizeLegibility;--green:#064b2c;--green2:#087443;--gold:#bd9650;--line:#d5dfd6;--muted:#607066;--paper:#fff}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 85% 0%,#dcebdc 0,transparent 42%),#eef3ed}button,input,select{font:inherit}button{cursor:pointer}
+    header{background:linear-gradient(115deg,#073b25,#075834 58%,#124c32);color:#fff;border-bottom:4px solid var(--gold);box-shadow:0 6px 24px #123c2526}
+    .head-inner{max-width:1280px;margin:auto;padding:17px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:14px}.mark{width:50px;height:50px;display:grid;place-items:center;border:1px solid #d5b66d;border-radius:50%;font-weight:900;color:#f2d89b;font-size:17px}.brand h1{font-size:clamp(17px,2.4vw,25px);margin:0;color:#f2dfb6}.brand p{margin:3px 0 0;color:#d4e3d8;font-size:12px}.back{border:1px solid #ffffff55;color:white;background:#ffffff12;padding:9px 13px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap}
+    main{max-width:1280px;margin:0 auto;padding:24px;width:100%}.tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--line)}.tab{border:0;background:transparent;color:var(--muted);padding:11px 16px;font-weight:800;font-size:13px;border-bottom:3px solid transparent}.tab[aria-selected="true"]{color:var(--green);border-bottom-color:var(--gold)}
+    .layout{display:grid;grid-template-columns:minmax(270px,390px) minmax(0,1fr);gap:18px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 26px #173a2410}.controls{padding:18px;display:grid;gap:14px}.panel h2,.panel h3{margin:0;color:var(--green)}.panel h2{font-size:16px}.field{display:grid;gap:5px}.field label,.field-label{font-size:12px;font-weight:800;color:#34483a}.field input,.field select{min-width:0;width:100%;padding:9px 10px;border:1px solid #cdd8cf;border-radius:7px;background:#fff;color:#17231b;font-size:13px}.field input:focus,.field select:focus{outline:2px solid #b5d5bf;border-color:var(--green2)}input[type=file]{padding:7px;background:#f8faf8}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.options{display:grid;gap:9px;background:#f5f8f4;border:1px solid #e0e8e0;border-radius:8px;padding:12px}.range-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#3f5145}.range-row input{grid-column:1/-1;width:100%;accent-color:var(--green)}.check{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;font-weight:700}.check input{accent-color:var(--green);width:16px;height:16px}.actions{display:flex;flex-wrap:wrap;gap:8px}.btn{border:0;border-radius:7px;padding:10px 13px;background:var(--green);color:white;font-size:12px;font-weight:900}.btn:hover{background:#087443}.btn.secondary{background:#aa823c}.btn.secondary:hover{background:#89682f}.btn:disabled{opacity:.5;cursor:not-allowed}.note{font-size:11px;line-height:1.75;color:var(--muted);margin:0}.preview{padding:18px;display:grid;gap:14px;min-width:0}.preview-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.canvas-wrap{display:flex;justify-content:center;align-items:center;min-height:190px;padding:14px;background-color:#f6f8f6;background-image:linear-gradient(45deg,#e7ece7 25%,transparent 25%),linear-gradient(-45deg,#e7ece7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e7ece7 75%),linear-gradient(-45deg,transparent 75%,#e7ece7 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0;border:1px solid var(--line);border-radius:8px;overflow:auto}.canvas-wrap canvas{display:block;max-width:100%;height:auto}.qr-preview{white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;text-align:left;background:#f5f7f5;border:1px solid var(--line);padding:10px;border-radius:7px;color:#425147;font:11px/1.6 ui-monospace,monospace;max-height:140px;overflow:auto}.document-wrap{display:none}.document-wrap.visible{display:grid;gap:9px}.document-canvas{max-width:100%;height:auto;max-height:70vh;object-fit:contain;touch-action:none;cursor:grab;background:#fff}.document-canvas:active{cursor:grabbing}.verify-panel{display:none;max-width:760px;margin:auto;padding:20px;gap:16px}.verify-panel.visible{display:grid}.result{padding:12px;border:1px solid var(--line);border-radius:7px;background:#f6f8f6;font-size:12px;line-height:1.8;overflow-wrap:anywhere}.result.success{border-color:#75a889;background:#eef8f0;color:#14532d}.result.error{border-color:#d89a9a;background:#fff1f1;color:#842323}.result pre{direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}.hidden{display:none!important}footer{text-align:center;color:#718075;font-size:11px;padding:18px}
+    @media(max-width:820px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls h2,.controls .field:first-of-type,.controls .options,.controls .actions,.controls .note{grid-column:1/-1}.head-inner,main{padding:16px}.brand p{max-width:50vw}}
+    @media(max-width:520px){.controls{grid-template-columns:1fr}.controls>*{grid-column:1!important}.brand{gap:9px}.mark{width:40px;height:40px}.brand p{font-size:10px}.back{font-size:10px;padding:8px}.preview,.controls,.verify-panel{padding:13px}.two{gap:8px}.tab{padding:10px 11px;font-size:12px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head-inner">
+      <div class="brand"><div class="mark" aria-hidden="true">SNTE</div><div><h1>توثيق الوثائق النقابية</h1><p>إنشاء ملصق QR ودمجه على صورة وثيقة</p></div></div>
+      <a class="back" href="./">العودة إلى البوابة</a>
+    </div>
+  </header>
+  <main>
+    <div class="tabs" role="tablist" aria-label="أداة التوثيق">
+      <button class="tab" id="createTab" role="tab" aria-selected="true" type="button">إنشاء ودمج البصمة</button>
+      <button class="tab" id="verifyTab" role="tab" aria-selected="false" type="button">فحص رمز QR</button>
+    </div>
+    <section id="createView" class="layout">
+      <form class="panel controls" id="stampForm">
+        <h2>بيانات الوثيقة</h2>
+        <div class="field"><label for="docImage">صورة الوثيقة (اختياري)</label><input id="docImage" type="file" accept="image/*"></div>
+        <div class="field"><label for="docRef">الترقيم النقابي</label><input id="docRef" type="text" value="93 / ن و ع ت / ا و / 2026" required></div>
+        <div class="two">
+          <div class="field"><label for="docType">نوع الوثيقة</label><select id="docType"><option>مذكرة تنظيمية</option><option>بيان نقابي</option><option>مراسلة رسمية</option><option>بيان المكتب الولائي</option><option>شكوى رسمية</option><option>طلب لقاء</option><option>تعليمة داخلية</option><option>استدعاء رسمي</option><option>تقرير إداري/نقابي</option><option>مقررة إدارية</option></select></div>
+          <div class="field"><label for="docDate">تاريخ الإصدار</label><input id="docDate" type="date" required></div>
+        </div>
+        <div class="options">
+          <span class="field-label">إعدادات الملصق</span>
+          <label class="range-row"><span>شفافية الخلفية</span><output id="alphaValue">0%</output><input id="alpha" type="range" min="0" max="100" value="0"></label>
+          <label class="range-row"><span>حجم الملصق على الوثيقة</span><output id="scaleValue">42%</output><input id="scale" type="range" min="20" max="70" value="42"></label>
+          <label class="check"><span>إظهار إطار الملصق</span><input id="frame" type="checkbox" checked></label>
+          <label class="check"><span>إظهار الترقيم داخل الملصق</span><input id="showRef" type="checkbox" checked></label>
+        </div>
+        <div class="actions"><button class="btn" id="downloadBadge" type="button">تنزيل ملصق PNG</button><button class="btn secondary" id="downloadDocument" type="button" disabled>تنزيل الوثيقة المختومة</button></div>
+        <p class="note">يحتوي رمز QR على بيانات الوثيقة وبصمة SHA-256 لها. هذه البصمة تساعد على كشف تغيّر البيانات، لكنها لا تثبت هوية المُصدر أو اعتماد الوثيقة رسميًا.</p>
+      </form>
+      <section class="panel preview" aria-label="معاينة الملصق">
+        <div class="preview-head"><h2>معاينة الملصق</h2><span class="note" id="status">جاهز</span></div>
+        <div class="canvas-wrap"><canvas id="badgeCanvas" width="900" height="300"></canvas></div>
+        <div><h3>بيانات رمز QR</h3><pre id="qrPayload" class="qr-preview"></pre></div>
+        <div id="documentWrap" class="document-wrap"><h3>معاينة الوثيقة</h3><p class="note">اسحب الملصق على الصورة لتغيير موضعه.</p><div class="canvas-wrap"><canvas id="documentCanvas" class="document-canvas"></canvas></div></div>
+      </section>
+    </section>
+    <section id="verifyView" class="panel verify-panel">
+      <h2>فحص رمز QR</h2>
+      <p class="note">اختر صورة تحتوي على الملصق. تتم قراءة الرمز داخل المتصفح ولا تُرفع الصورة إلى خادم.</p>
+      <div class="field"><label for="verifyImage">صورة الملصق أو الوثيقة</label><input id="verifyImage" type="file" accept="image/*"></div>
+      <div id="verifyResult" class="result" aria-live="polite">لم يتم اختيار صورة بعد.</div>
+    </section>
+  </main>
+  <footer>النقابة الوطنية لعمال التربية · أداة توثيق الوثائق</footer>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const form = $('stampForm');
+      const badge = $('badgeCanvas');
+      const badgeContext = badge.getContext('2d');
+      const documentCanvas = $('documentCanvas');
+      const documentContext = documentCanvas.getContext('2d');
+      const dateInput = $('docDate');
+      const today = new Date();
+      dateInput.value = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      let sourceImage = null;
+      let renderId = 0;
+      let stamp = { x: 30, y: 30, initialized: false };
+      let dragging = false;
+      let dragOffset = { x: 0, y: 0 };
+      let payload = '';
+      let qrReady = false;
+
+      const bytesToHex = (bytes) => Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
+      async function makePayload() {
+        const details = {
+          app: 'SNTE-DOC-STAMP',
+          ref: $('docRef').value.trim(),
+          type: $('docType').value,
+          issueDate: dateInput.value
+        };
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(details)));
+        return { ...details, sha256: bytesToHex(digest) };
+      }
+      function roundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath(); ctx.roundRect(x, y, width, height, radius);
+      }
+      function drawDocument() {
+        if (!sourceImage) return;
+        const maxDimension = 3000;
+        const ratio = Math.min(1, maxDimension / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight));
+        documentCanvas.width = Math.round(sourceImage.naturalWidth * ratio);
+        documentCanvas.height = Math.round(sourceImage.naturalHeight * ratio);
+        documentContext.drawImage(sourceImage, 0, 0, documentCanvas.width, documentCanvas.height);
+        const width = documentCanvas.width * Number($('scale').value) / 100;
+        const height = width * badge.height / badge.width;
+        if (!stamp.initialized) {
+          stamp.x = Math.max(12, documentCanvas.width * 0.04);
+          stamp.y = Math.max(12, documentCanvas.height - height - documentCanvas.height * 0.03);
+          stamp.initialized = true;
+        }
+        stamp.x = Math.max(0, Math.min(documentCanvas.width - width, stamp.x));
+        stamp.y = Math.max(0, Math.min(documentCanvas.height - height, stamp.y));
+        documentContext.drawImage(badge, stamp.x, stamp.y, width, height);
+      }
+      async function updateAll() {
+        const currentRender = ++renderId;
+        if (!window.QRious) {
+          $('status').textContent = 'تعذر تحميل مكتبة QR. تحقق من اتصال الإنترنت.';
+          return;
+        }
+        if (!window.crypto || !crypto.subtle) {
+          $('status').textContent = 'يتطلب إنشاء البصمة اتصالًا آمنًا HTTPS.';
+          return;
+        }
+        $('alphaValue').value = `${$('alpha').value}%`;
+        $('scaleValue').value = `${$('scale').value}%`;
+        $('status').textContent = 'جارٍ إنشاء البصمة…';
+        try {
+          const data = await makePayload();
+          if (currentRender !== renderId) return;
+          payload = JSON.stringify(data);
+          $('qrPayload').textContent = JSON.stringify(data, null, 2);
+          const qrCanvas = document.createElement('canvas');
+          new QRious({ element: qrCanvas, value: payload, size: 480, level: 'H', background: '#ffffff', foreground: '#10251a' });
+          badgeContext.clearRect(0, 0, badge.width, badge.height);
+          const alpha = Number($('alpha').value) / 100;
+          if (alpha > 0) {
+            badgeContext.fillStyle = `rgba(255,255,255,${alpha})`;
+            roundedRect(badgeContext, 4, 4, badge.width - 8, badge.height - 8, 24);
+            badgeContext.fill();
+          }
+          if ($('frame').checked) {
+            badgeContext.strokeStyle = '#bd9650'; badgeContext.lineWidth = 5;
+            roundedRect(badgeContext, 5, 5, badge.width - 10, badge.height - 10, 23);
+            badgeContext.stroke();
+          }
+          const qrSize = 240;
+          badgeContext.drawImage(qrCanvas, 28, 30, qrSize, qrSize);
+          badgeContext.fillStyle = '#064b2c';
+          badgeContext.textAlign = 'right'; badgeContext.direction = 'rtl';
+          badgeContext.font = '900 35px Cairo, sans-serif';
+          badgeContext.fillText('البصمة الإلكترونية', 858, 82, 550);
+          badgeContext.font = '800 22px Cairo, sans-serif';
+          badgeContext.fillText(`SNTE · ${data.issueDate}`, 858, 126, 550);
+          if ($('showRef').checked) {
+            badgeContext.font = '700 19px Cairo, sans-serif'; badgeContext.fillStyle = '#35483a';
+            badgeContext.fillText(`الترقيم: ${data.ref}`, 858, 169, 550);
+          }
+          badgeContext.font = '800 21px Cairo, sans-serif'; badgeContext.fillStyle = '#bd9650';
+          badgeContext.fillText('SNTE', 858, 225);
+          badgeContext.direction = 'ltr'; badgeContext.textAlign = 'left';
+          badgeContext.font = '11px ui-monospace, monospace'; badgeContext.fillStyle = '#607066';
+          badgeContext.fillText(`SHA-256  ${data.sha256.slice(0, 32)}…`, 300, 267, 550);
+          qrReady = true;
+          $('downloadBadge').disabled = false;
+          drawDocument();
+          $('status').textContent = 'تم إنشاء QR وبصمة SHA-256 للبيانات';
+        } catch (error) {
+          $('status').textContent = 'تعذر إنشاء البصمة في هذا المتصفح.';
+        }
+      }
+      function downloadCanvas(canvas, name) {
+        const link = document.createElement('a');
+        link.download = name;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }
+      $('createTab').addEventListener('click', () => {
+        $('createTab').setAttribute('aria-selected', 'true'); $('verifyTab').setAttribute('aria-selected', 'false');
+        $('createView').classList.remove('hidden'); $('verifyView').classList.remove('visible');
+      });
+      $('verifyTab').addEventListener('click', () => {
+        $('verifyTab').setAttribute('aria-selected', 'true'); $('createTab').setAttribute('aria-selected', 'false');
+        $('createView').classList.add('hidden'); $('verifyView').classList.add('visible');
+      });
+      form.addEventListener('input', updateAll);
+      form.addEventListener('change', updateAll);
+      $('downloadBadge').addEventListener('click', () => qrReady && downloadCanvas(badge, `SNTE-Stamp-${Date.now()}.png`));
+      $('downloadDocument').addEventListener('click', () => sourceImage && downloadCanvas(documentCanvas, `SNTE-Document-${Date.now()}.png`));
+      $('docImage').addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { $('status').textContent = 'اختر ملف صورة صالحًا.'; return; }
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          sourceImage = image; stamp.initialized = false;
+          $('documentWrap').classList.add('visible'); $('downloadDocument').disabled = false;
+          URL.revokeObjectURL(objectUrl); updateAll();
+        };
+        image.onerror = () => { URL.revokeObjectURL(objectUrl); $('status').textContent = 'تعذر قراءة الصورة.'; };
+        image.src = objectUrl;
+      });
+      documentCanvas.addEventListener('pointerdown', (event) => {
+        if (!sourceImage) return;
+        const rect = documentCanvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) * documentCanvas.width / rect.width;
+        const y = (event.clientY - rect.top) * documentCanvas.height / rect.height;
+        const width = documentCanvas.width * Number($('scale').value) / 100;
+        const height = width * badge.height / badge.width;
+        if (x < stamp.x || x > stamp.x + width || y < stamp.y || y > stamp.y + height) return;
+        dragging = true; dragOffset = { x: x - stamp.x, y: y - stamp.y };
+        documentCanvas.setPointerCapture(event.pointerId);
+      });
+      documentCanvas.addEventListener('pointermove', (event) => {
+        if (!dragging || !sourceImage) return;
+        const rect = documentCanvas.getBoundingClientRect();
+        stamp.x = (event.clientX - rect.left) * documentCanvas.width / rect.width - dragOffset.x;
+        stamp.y = (event.clientY - rect.top) * documentCanvas.height / rect.height - dragOffset.y;
+        drawDocument();
+      });
+      documentCanvas.addEventListener('pointerup', () => { dragging = false; });
+      documentCanvas.addEventListener('pointercancel', () => { dragging = false; });
+      $('verifyImage').addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const result = $('verifyResult'); result.className = 'result'; result.textContent = 'جارٍ فحص الصورة…';
+        if (!window.jsQR) { result.classList.add('error'); result.textContent = 'تعذر تحميل مكتبة قراءة QR. تحقق من اتصال الإنترنت.'; return; }
+        const image = new Image(); const url = URL.createObjectURL(file);
+        image.onload = () => {
+          const ratio = Math.min(1, 2000 / Math.max(image.naturalWidth, image.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(image.naturalWidth * ratio); canvas.height = Math.round(image.naturalHeight * ratio);
+          const context = canvas.getContext('2d', { willReadFrequently: true }); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          try {
+            const code = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+            if (!code) throw new Error('لم يُعثر على رمز QR واضح في الصورة.');
+            const parsed = JSON.parse(code.data);
+            if (parsed.app !== 'SNTE-DOC-STAMP' || !parsed.ref || !parsed.issueDate || !/^[a-f0-9]{64}$/.test(parsed.sha256 || '')) throw new Error('محتوى QR غير مطابق لصيغة هذه الأداة.');
+            const details = { app: parsed.app, ref: parsed.ref, type: parsed.type, issueDate: parsed.issueDate };
+            crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(details))).then((digest) => {
+              const valid = bytesToHex(digest) === parsed.sha256;
+              result.className = `result ${valid ? 'success' : 'error'}`;
+              result.innerHTML = `${valid ? 'تطابقت بصمة بيانات QR.' : 'فشل التحقق من بصمة بيانات QR.'}<pre>${JSON.stringify(parsed, null, 2).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</pre><span>هذا الفحص لا يثبت هوية المُصدر أو الاعتماد الرسمي.</span>`;
+            });
+          } catch (error) {
+            result.className = 'result error'; result.textContent = error.message || 'تعذر فحص رمز QR.';
+          }
+          URL.revokeObjectURL(url);
+        };
+        image.onerror = () => { URL.revokeObjectURL(url); result.className = 'result error'; result.textContent = 'تعذر قراءة الصورة.'; };
+        image.src = url;
+      });
+      $('downloadBadge').disabled = true;
+      window.addEventListener('DOMContentLoaded', updateAll, { once: true });
+    })();
+  </script>
+</body>
+</html>
