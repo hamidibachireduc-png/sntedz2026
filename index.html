@@ -4,15 +4,111 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      body { margin: 0; overflow-x: hidden; }
+      
+      /* 1. الشريط العائم الجديد في أسفل الشاشة (بعيداً عن أزرارك العلوية) */
+      #snte-bottom-dock {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(to right, #006633, #004d26);
+        border: 3px solid #FFD700;
+        border-radius: 25px;
+        padding: 10px 30px;
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        z-index: 999999; /* طبقة عليا */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      }
+
+      /* تنسيق الأيقونات ثلاثية الأبعاد */
+      .btn-3d {
+        cursor: pointer; text-decoration: none;
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        transition: transform 0.3s ease;
+      }
+      .btn-3d:hover { transform: translateY(-5px) scale(1.1); }
+      .btn-3d:active { transform: translateY(2px) scale(0.95); }
+      .btn-3d img { height: 60px; width: auto; border-radius: 12px; pointer-events: none; }
+      .btn-text { color: white; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: bold; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+
+      /* زر العودة للبوابة (يظهر فقط عند فتح منصة) */
+      #close-platform-btn {
+        background: #d9222a;
+        color: white;
+        border: 2px solid white;
+        font-family: 'Cairo', sans-serif;
+        font-size: 14px;
+        font-weight: 900;
+        padding: 10px 20px;
+        border-radius: 15px;
+        cursor: pointer;
+        display: none; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        transition: background 0.3s;
+      }
+      #close-platform-btn:hover { background: #b81820; }
+
+      /* 2. حاوية المنصات (iframe) */
+      #platform-container {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100vh;
+        z-index: 999998; /* تحت الشريط العائم مباشرة */
+        background: #f4f7f6;
+      }
+      #platform-frame { width: 100%; height: 100%; border: none; }
+    </style>
   </head>
-  <body class="bg-[#052814] text-white">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <body class="bg-[#f4f7f6] text-[#1e293b]">
     
-    <!-- هنا يقوم React بتحميل واجهتك الأصلية -->
+    <!-- واجهة React الأصلية الخاصة بك المليئة بالأزرار (لن نلمسها وستظهر في الأعلى) -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- الشريط العائم في أسفل الشاشة -->
+    <div id="snte-bottom-dock">
+      
+      <!-- أيقونة بوابة الناظر -->
+      <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')">
+        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="الناظر">
+        <span class="btn-text">بوابة الناظر</span>
+      </a>
+      
+      <!-- أيقونة بوابة الأستاذ -->
+      <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')">
+        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="الأستاذ">
+        <span class="btn-text">بوابة الأستاذ</span>
+      </a>
+
+      <!-- زر العودة (مخفي افتراضياً) -->
+      <button id="close-platform-btn" onclick="closePlatform()">إغلاق والعودة للبوابة</button>
+      
+    </div>
+
+    <!-- نافذة عرض المنصات -->
+    <div id="platform-container">
+      <iframe id="platform-frame"></iframe>
+    </div>
+
+    <script>
+      // دالة فتح المنصة
+      function openPlatform(url) {
+        document.getElementById('platform-frame').src = url;
+        document.getElementById('platform-container').style.display = 'block';
+        document.getElementById('close-platform-btn').style.display = 'block';
+      }
+      
+      // دالة إغلاق المنصة
+      function closePlatform() {
+        document.getElementById('platform-container').style.display = 'none';
+        document.getElementById('platform-frame').src = '';
+        document.getElementById('close-platform-btn').style.display = 'none';
+      }
+    </script>
   </body>
 </html>
