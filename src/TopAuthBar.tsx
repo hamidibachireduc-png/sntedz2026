@@ -18,7 +18,6 @@ import { UnionStatutesModal } from './UnionStatutesModal';
 import { ContactSupportComponent } from './ContactSupportComponent';
 import { DigitalPlatformsModal } from './DigitalPlatformsModal';
 import { GitHubExportModal } from './GitHubExportModal';
-import { PortalMessagesModal } from './PortalMessagesModal';
 import { callContactCardsApi } from './contactCardsApi';
 import {
   SnteNotification,
@@ -55,7 +54,6 @@ export const TopAuthBar: React.FC = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isPlatformsModalOpen, setIsPlatformsModalOpen] = useState(false);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
-  const [isPortalMessagesOpen, setIsPortalMessagesOpen] = useState(false);
   const [notifications, setNotifications] = useState<SnteNotification[]>([]);
   const [toastNotification, setToastNotification] = useState<SnteNotification | null>(null);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
@@ -526,15 +524,6 @@ export const TopAuthBar: React.FC = () => {
                 
                 <button
                   type="button"
-                  onClick={() => setIsPortalMessagesOpen(true)}
-                  className="bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm px-2.5 py-1.5 rounded-xl transition-all cursor-pointer border border-white/10 flex items-center gap-1.5"
-                  title="مراسلات داخلية بين حسابات البوابة المفعّلة"
-                >
-                  <span>✉️</span>
-                  <span>التراسل</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('snte-navigate', { detail: 'admin-stats' }));
                   }}
@@ -993,13 +982,6 @@ export const TopAuthBar: React.FC = () => {
       <VirtualMeetingModal isOpen={isMeetingOpen} onClose={() => setIsMeetingOpen(false)} />
 
       <ContactSupportComponent isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-
-      <PortalMessagesModal
-        isOpen={isPortalMessagesOpen}
-        onClose={() => setIsPortalMessagesOpen(false)}
-        currentUser={currentUser}
-        onUserUpdated={setCurrentUser}
-      />
 
       {toastNotification && (
         <aside
