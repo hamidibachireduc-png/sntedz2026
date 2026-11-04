@@ -6,110 +6,21 @@
     <title>البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E</title>
     <meta name="description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية بنظام التدرج الهيكلي والصلاحيات (وطني، ولائي، بلدي، فرع مؤسسة) وإدارة الانخراطات والمحاضر والإحصائيات." />
     <meta property="og:title" content="البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E" />
+    <meta property="og:description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية بنظام التدرج الهيكلي والصلاحيات (وطني، ولائي، بلدي، فرع مؤسسة) وإدارة الانخراطات والمحاضر والإحصائيات." />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="/assets/aistudio/Screenshot_2026-10-24-13-12-59-21_c0d35d5c8ea536686f7fb1c9f2f8f274_df626750.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/assets/aistudio/Screenshot_2026-10-24-13-12-59-21_c0d35d5c8ea536686f7fb1c9f2f8f274_df626750.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-      body { margin: 0; overflow-x: hidden; }
-      
-      /* شريط التنقل الثابت في الأعلى */
-      #snte-navbar {
-        background: linear-gradient(to right, #006633, #004d26);
-        border-bottom: 3px solid #FFD700;
-        padding: 10px 20px;
-        display: flex; justify-content: center; gap: 25px;
-        position: fixed; top: 0; left: 0; right: 0;
-        z-index: 999999; direction: rtl; transition: top 0.4s ease-in-out;
-        align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;
-      }
-      
-      /* تنسيق الأزرار (وسوم a) */
-      .btn-3d {
-        cursor: pointer; text-decoration: none; padding: 0;
-        transition: transform 0.3s ease, filter 0.3s ease;
-        display: flex; flex-direction: column; align-items: center; gap: 5px;
-      }
-      .btn-3d:hover { transform: translateY(-5px) scale(1.08); filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.4)) brightness(1.1); }
-      .btn-3d:active { transform: translateY(2px) scale(0.98); filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2)); }
-      .btn-3d img { height: 55px; width: auto; border-radius: 12px; pointer-events: none; }
-      .btn-text { color: #ffffff; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.6); pointer-events: none; white-space: nowrap; }
-
-      /* الإطار العائم الذي سيغطي React عند فتحه */
-      #platform-frame {
-        display: none;
-        position: fixed; top: 100px; left: 0;
-        width: 100%; height: calc(100vh - 100px);
-        border: none; z-index: 999998; /* طبقة عالية جداً تحت الشريط مباشرة */
-        background: #f4f7f6;
-      }
-      
-      #root { margin-top: 100px; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b] antialiased selection:bg-[#006633] selection:text-white">
-    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
-    <!-- شريط التنقل الذكي الخاص بنقابة SNTE -->
-    <div id="snte-navbar">
-      
-      <a href="javascript:void(0)" id="btn-home" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">البوابة التفاعلية S.N.T.E</a>
-      
-      <!-- زر الناظر -->
-      <a href="javascript:void(0)" id="btn-nather" class="btn-3d">
-        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="بوابة الناظر">
-        <span class="btn-text">بوابة الناظر</span>
-      </a>
-      
-      <!-- زر الأستاذ -->
-      <a href="javascript:void(0)" id="btn-ostad" class="btn-3d">
-        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="بوابة الأستاذ">
-        <span class="btn-text">بوابة الأستاذ</span>
-      </a>
-      
-    </div>
-
-    <!-- نافذة العرض وإطار التطبيق -->
-    <iframe id="platform-frame"></iframe>
+    <!-- جذر التطبيق الذي سيعرض مكونات React (App.tsx) -->
     <div id="root"></div>
+    
     <script type="module" src="/src/main.tsx"></script>
-
-    <!-- الأكواد البرمجية للتشغيل المضمون -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const frame = document.getElementById('platform-frame');
-
-        // فتح منصة الناظر
-        document.getElementById('btn-nather').addEventListener('click', function() {
-          frame.src = 'https://hamidibachireduc-png.github.io/nathersnte2026/';
-          frame.style.display = 'block';
-        });
-
-        // فتح منصة الأستاذ
-        document.getElementById('btn-ostad').addEventListener('click', function() {
-          frame.src = 'https://hamidibachireduc-png.github.io/ostadsntedz2026/';
-          frame.style.display = 'block';
-        });
-
-        // العودة للبوابة الرئيسية (إغلاق المنصات)
-        document.getElementById('btn-home').addEventListener('click', function() {
-          frame.style.display = 'none';
-          frame.src = '';
-        });
-      });
-
-      // إخفاء الشريط عند التمرير لأسفل
-      let prevScrollpos = window.pageYOffset;
-      window.onscroll = function() {
-        let currentScrollPos = window.pageYOffset;
-        if (prevScrollpos > currentScrollPos) {
-          document.getElementById("snte-navbar").style.top = "0";
-        } else {
-          document.getElementById("snte-navbar").style.top = "-130px";
-        }
-        prevScrollpos = currentScrollPos;
-      }
-    </script>
   </body>
 </html>
