@@ -8,56 +8,44 @@
     <style>
       body { margin: 0; overflow-x: hidden; }
       
-      /* حاوية الشريط العائم الأساسية */
+      /* حاوية الشريط العائم الأساسية (تم تفعيل مؤشر السحب عليها) */
       #snte-dock-wrapper {
         position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 999999; /* دائماً في الأعلى */
+        z-index: 999999;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 10px;
+        cursor: grab; /* مؤشر اليد للسحب */
       }
+      #snte-dock-wrapper:active { cursor: grabbing; } /* شكل اليد عند الإمساك */
 
-      /* زر التحكم (فتح/إغلاق الشريط) */
+      /* زر التحكم (فتح/إغلاق) */
       #toggle-dock-btn {
-        background: #FFD700;
-        color: #006633;
-        border: 2px solid #004d26;
-        border-radius: 20px;
-        padding: 5px 20px;
-        font-family: 'Cairo', sans-serif;
-        font-weight: 900;
-        font-size: 12px;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
+        background: #FFD700; color: #006633; border: 2px solid #004d26;
+        border-radius: 20px; padding: 5px 20px; font-family: 'Cairo', sans-serif;
+        font-weight: 900; font-size: 12px; cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.3s ease;
       }
       #toggle-dock-btn:hover { background: #ffea00; transform: scale(1.05); }
 
-      /* الشريط الذي يحتوي الأيقونات */
+      /* الشريط الأخضر الذي يحتوي الأيقونات */
       #snte-bottom-dock {
         background: linear-gradient(to right, #006633, #004d26);
-        border: 3px solid #FFD700;
-        border-radius: 25px;
-        padding: 10px 30px;
-        display: flex;
-        align-items: center;
-        gap: 30px;
+        border: 3px solid #FFD700; border-radius: 25px;
+        padding: 15px 30px 10px 30px; /* مساحة علوية إضافية لمؤشر السحب */
+        display: flex; align-items: center; gap: 30px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease;
-        /* الافتراضي: مفتوح */
-        transform: translateY(0) scale(1);
-        opacity: 1;
+        position: relative;
       }
       
-      /* الكلاس الذي يُضاف عند الطي */
+      /* كلاس الإخفاء */
       #snte-bottom-dock.hidden-dock {
-        transform: translateY(100px) scale(0.5); /* ينزل للأسفل ويصغر */
-        opacity: 0;
-        pointer-events: none; /* لمنع النقر وهو مخفي */
+        transform: translateY(100px) scale(0.5); opacity: 0; pointer-events: none;
       }
 
       /* تنسيق الأيقونات ثلاثية الأبعاد */
@@ -71,17 +59,16 @@
       .btn-3d img { height: 60px; width: auto; border-radius: 12px; pointer-events: none; }
       .btn-text { color: white; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: bold; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-      /* زر العودة للبوابة (يظهر فقط عند فتح منصة) */
+      /* زر العودة للبوابة */
       #close-platform-btn {
         background: #d9222a; color: white; border: 2px solid white;
         font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 900;
         padding: 10px 20px; border-radius: 15px; cursor: pointer;
-        display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        transition: background 0.3s;
+        display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: background 0.3s;
       }
       #close-platform-btn:hover { background: #b81820; }
 
-      /* حاوية المنصات (iframe) */
+      /* حاوية المنصات */
       #platform-container {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
         z-index: 999998; background: #f4f7f6;
@@ -91,18 +78,19 @@
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b]">
     
-    <!-- واجهة React الأصلية الخاصة بك المليئة بالأزرار -->
+    <!-- واجهة React الأصلية -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- الحاوية العائمة في أسفل الشاشة (قابلة للتحكم) -->
+    <!-- الحاوية العائمة (قابلة للسحب والتحكم) -->
     <div id="snte-dock-wrapper">
       
-      <!-- زر التحكم في الطي والإظهار -->
       <button id="toggle-dock-btn" onclick="toggleDock()">إخفاء المنصات ▼</button>
 
-      <!-- الشريط الذي يحتوي الأيقونات -->
       <div id="snte-bottom-dock">
+        <!-- مؤشر بصري للسحب (نقاط أعلى الشريط) -->
+        <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); color: rgba(255,215,0,0.6); font-size: 14px; pointer-events: none;">⠿</div>
+
         <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')">
           <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="الناظر">
           <span class="btn-text">بوابة الناظر</span>
@@ -118,20 +106,18 @@
 
     </div>
 
-    <!-- نافذة عرض المنصات -->
+    <!-- نافذة العرض -->
     <div id="platform-container">
       <iframe id="platform-frame"></iframe>
     </div>
 
-    <!-- الأوامر البرمجية للحركة -->
+    <!-- أكواد الحركة، السحب والإفلات -->
     <script>
+      // 1. نظام طي وإظهار الشريط
       let isDockVisible = true;
-
-      // دالة طي وإظهار الشريط
       function toggleDock() {
         const dock = document.getElementById('snte-bottom-dock');
         const btn = document.getElementById('toggle-dock-btn');
-        
         if (isDockVisible) {
           dock.classList.add('hidden-dock');
           btn.innerHTML = "إظهار المنصات ▲";
@@ -142,20 +128,85 @@
         isDockVisible = !isDockVisible;
       }
 
-      // دالة فتح المنصة
       function openPlatform(url) {
         document.getElementById('platform-frame').src = url;
         document.getElementById('platform-container').style.display = 'block';
         document.getElementById('close-platform-btn').style.display = 'block';
-        document.getElementById('toggle-dock-btn').style.display = 'none'; // إخفاء زر الطي أثناء فتح المنصة
+        document.getElementById('toggle-dock-btn').style.display = 'none'; 
       }
-      
-      // دالة إغلاق المنصة
       function closePlatform() {
         document.getElementById('platform-container').style.display = 'none';
         document.getElementById('platform-frame').src = '';
         document.getElementById('close-platform-btn').style.display = 'none';
-        document.getElementById('toggle-dock-btn').style.display = 'block'; // إرجاع زر الطي
+        document.getElementById('toggle-dock-btn').style.display = 'block'; 
+      }
+
+      // 2. نظام السحب والإفلات المتقدم (Mouse & Touch)
+      const dockWrapper = document.getElementById("snte-dock-wrapper");
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+      // أحداث الماوس للكمبيوتر
+      dockWrapper.onmousedown = dragMouseDown;
+
+      function dragMouseDown(e) {
+        // نمنع السحب إذا ضغط المستخدم على زر أو رابط لتجنب التعارض
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        e.preventDefault();
+        pos3 = e.clientX; pos4 = e.clientY;
+        
+        // تحويل الموقع ليكون حر الإحداثيات (Absolute) بدلاً من متمركز (Centered)
+        const rect = dockWrapper.getBoundingClientRect();
+        dockWrapper.style.left = rect.left + "px";
+        dockWrapper.style.top = rect.top + "px";
+        dockWrapper.style.bottom = "auto";
+        dockWrapper.style.transform = "none";
+
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+      }
+
+      function elementDrag(e) {
+        e.preventDefault();
+        pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+        pos3 = e.clientX; pos4 = e.clientY;
+        dockWrapper.style.top = (dockWrapper.offsetTop - pos2) + "px";
+        dockWrapper.style.left = (dockWrapper.offsetLeft - pos1) + "px";
+      }
+
+      function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+
+      // أحداث اللمس للهواتف الذكية
+      dockWrapper.addEventListener('touchstart', function(e) {
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        let touch = e.touches[0];
+        pos3 = touch.clientX; pos4 = touch.clientY;
+        
+        const rect = dockWrapper.getBoundingClientRect();
+        dockWrapper.style.left = rect.left + "px";
+        dockWrapper.style.top = rect.top + "px";
+        dockWrapper.style.bottom = "auto";
+        dockWrapper.style.transform = "none";
+        
+        document.addEventListener('touchend', closeDragElementTouch);
+        document.addEventListener('touchmove', elementDragTouch, {passive: false});
+      }, {passive: false});
+
+      function elementDragTouch(e) {
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        e.preventDefault(); // يمنع الشاشة من النزول عند السحب
+        let touch = e.touches[0];
+        pos1 = pos3 - touch.clientX; pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX; pos4 = touch.clientY;
+        dockWrapper.style.top = (dockWrapper.offsetTop - pos2) + "px";
+        dockWrapper.style.left = (dockWrapper.offsetLeft - pos1) + "px";
+      }
+
+      function closeDragElementTouch() {
+        document.removeEventListener('touchend', closeDragElementTouch);
+        document.removeEventListener('touchmove', elementDragTouch);
       }
     </script>
   </body>
