@@ -26,7 +26,13 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 5px; /* المسافة بين الصورة والنص */
+        gap: 5px;
+        position: relative;
+        z-index: 99999; /* رفع الزر فوق التطبيق */
+      }
+      /* منع الصورة والنص من عرقلة الضغط على الزر */
+      .btn-3d img, .btn-3d span {
+        pointer-events: none;
       }
       .btn-3d:hover {
         transform: translateY(-5px) scale(1.08);
@@ -39,10 +45,10 @@
       .btn-text {
         color: #ffffff;
         font-family: 'Cairo', sans-serif;
-        font-size: 13px; /* حجم خط صغير لا يتجاوز عرض الصورة */
+        font-size: 13px;
         font-weight: 700;
-        white-space: nowrap; /* يمنع نزول النص لسطرين */
-        text-shadow: 0 1px 3px rgba(0,0,0,0.6); /* ظل خفيف لقراءة أوضح */
+        white-space: nowrap;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
       }
     </style>
   </head>
@@ -50,10 +56,10 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- شريط التنقل الذكي الخاص بنقابة SNTE -->
-    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 25px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;">
+    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 25px; position: fixed; top: 0; left: 0; right: 0; z-index: 999999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;">
       
       <!-- اسم البوابة -->
-      <a href="#" onclick="window.showMainPortal(); return false;" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">البوابة التفاعلية S.N.T.E</a>
+      <a href="#" onclick="window.showMainPortal(); return false;" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 99999;">البوابة التفاعلية S.N.T.E</a>
       
       <!-- أيقونة بوابة الناظر مع النص -->
       <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')" title="بوابة الناظر">
@@ -66,23 +72,11 @@
         <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="بوابة الأستاذ" style="height: 55px; width: auto; border-radius: 12px;">
         <span class="btn-text">بوابة الأستاذ</span>
       </button>
-
-      <!-- زر المدير مستقبلاً يضاف هنا بنفس الهيكلة -->
       
     </div>
 
     <script>
-      let prevScrollpos = window.pageYOffset;
-      window.onscroll = function() {
-        let currentScrollPos = window.pageYOffset;
-        if (prevScrollpos > currentScrollPos) {
-          document.getElementById("snte-navbar").style.top = "0";
-        } else {
-          document.getElementById("snte-navbar").style.top = "-130px";
-        }
-        prevScrollpos = currentScrollPos;
-      }
-
+      // إعداد دوال الفتح بشكل عام للنافذة
       window.loadPlatform = function(url) {
         document.getElementById('root').style.display = 'none';
         let iframe = document.getElementById('platform-frame');
@@ -97,6 +91,17 @@
         document.getElementById('root').style.display = 'block';
         window.scrollTo(0, 0);
       };
+
+      let prevScrollpos = window.pageYOffset;
+      window.onscroll = function() {
+        let currentScrollPos = window.pageYOffset;
+        if (prevScrollpos > currentScrollPos) {
+          document.getElementById("snte-navbar").style.top = "0";
+        } else {
+          document.getElementById("snte-navbar").style.top = "-130px";
+        }
+        prevScrollpos = currentScrollPos;
+      }
     </script>
 
     <iframe id="platform-frame"></iframe>
