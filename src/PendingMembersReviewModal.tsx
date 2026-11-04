@@ -138,6 +138,17 @@ export const PendingMembersReviewModal: React.FC<PendingMembersReviewModalProps>
     return true; // إذا نجح في المرور من كل الشروط السابقة (مثل الأمين الولائي)
   };
 
+  const getMemberStatus = (member: any): 'temporary_pending' | 'active' | 'rejected' => {
+    if (member.membershipStatus === 'temporary_pending' || member.membershipStatus === 'active' || member.membershipStatus === 'rejected') {
+      return member.membershipStatus;
+    }
+    if (member.status?.includes('مرفوض')) return 'rejected';
+    if (member.status?.includes('مؤقت') || member.status?.includes('بانتظار') || !member.duesPaid) {
+      return 'temporary_pending';
+    }
+    return 'active';
+  };
+
   const relevantMembers = members.filter((m) => {
     // التحقق من الصلاحيات الهرمية أولاً
     if (!checkMemberAuthority(m)) return false;
@@ -150,7 +161,7 @@ export const PendingMembersReviewModal: React.FC<PendingMembersReviewModalProps>
     }
 
     // فلتر الحالة (مؤقت، نشط، مرفوض، الكل)
-    const mStatus = m.membershipStatus || (m.status?.includes('مؤقت') || m.status?.includes('بانتظار') ? 'temporary_pending' : 'active');
+    const mStatus = getMemberStatus(m);
     if (statusFilter === 'pending' && mStatus !== 'temporary_pending') return false;
     if (statusFilter === 'active' && mStatus !== 'active') return false;
     if (statusFilter === 'rejected' && mStatus !== 'rejected') return false;
@@ -173,14 +184,12 @@ export const PendingMembersReviewModal: React.FC<PendingMembersReviewModalProps>
 
   const pendingCount = members.filter((m) => {
     if (!checkMemberAuthority(m)) return false;
-    const mStatus = m.membershipStatus || (m.status?.includes('مؤقت') || m.status?.includes('بانتظار') ? 'temporary_pending' : 'active');
-    return mStatus === 'temporary_pending';
+    return getMemberStatus(m) === 'temporary_pending';
   }).length;
 
   const activeCount = members.filter((m) => {
     if (!checkMemberAuthority(m)) return false;
-    const mStatus = m.membershipStatus || (m.status?.includes('نشط') ? 'active' : '');
-    return mStatus === 'active';
+    return getMemberStatus(m) === 'active';
   }).length;
 
   const totalScopedCount = members.filter((m) => checkMemberAuthority(m)).length;
@@ -354,10 +363,9 @@ export const PendingMembersReviewModal: React.FC<PendingMembersReviewModalProps>
 
   // 4. Accept All Pending Memberships
   const handleAcceptAllPending = () => {
-    const pendingList = relevantMembers.filter(m => {
-      const mStatus = m.membershipStatus || (m.status?.includes('مؤقت') || m.status?.includes('بانتظار') ? 'temporary_pending' : 'active');
-      return mStatus === 'temporary_pending';
-    });
+    const pendingList = members.filter(
+      (member) => checkMemberAuthority(member) && getMemberStatus(member) === 'temporary_pending'
+    );
 
     if (pendingList.length === 0) {
       alert('لا توجد طلبات انخراط معلقة حالياً ضمن صلاحياتك.');
@@ -635,7 +643,7 @@ export const PendingMembersReviewModal: React.FC<PendingMembersReviewModalProps>
                 const isExpired = Date.now() > expiresTime;
                 const daysLeft = Math.max(0, Math.ceil((expiresTime - Date.now()) / (1000 * 60 * 60 * 24)));
                 
-                const mStatus = m.membershipStatus || (m.status?.includes('مؤقت') || m.status?.includes('بانتظار') ? 'temporary_pending' : 'active');
+                const mStatus = getMemberStatus(m);
                 const isPending = mStatus === 'temporary_pending';
                 const isActive = mStatus === 'active';
                 const isRejected = mStatus === 'rejected';
