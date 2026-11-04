@@ -38,20 +38,23 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- شريط التنقل الذكي الخاص بنقابة SNTE -->
-    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;">
       
       <!-- اسم البوابة (للعودة للرئيسية) -->
-      <a href="#" onclick="showMainPortal(); return false;" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">البوابة التفاعلية S.N.T.E</a>
+      <a href="#" onclick="window.showMainPortal(); return false;" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">البوابة التفاعلية S.N.T.E</a>
       
-      <!-- أيقونة بوابة الناظر (قم بتعديل اسم الصورة nather.png إذا لزم الأمر) -->
+      <!-- أيقونة بوابة الناظر -->
       <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')" title="بوابة الناظر">
-        <img src="./nather.png" alt="بوابة الناظر" style="height: 65px; width: auto; border-radius: 12px;">
+        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="بوابة الناظر" style="height: 65px; width: auto; border-radius: 12px;">
       </button>
       
-      <!-- أيقونة بوابة الأستاذ (قم بتعديل اسم الصورة ostad.png إذا لزم الأمر) -->
+      <!-- أيقونة بوابة الأستاذ -->
       <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')" title="بوابة الأستاذ">
-        <img src="./ostad.png" alt="بوابة الأستاذ" style="height: 65px; width: auto; border-radius: 12px;">
+        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="بوابة الأستاذ" style="height: 65px; width: auto; border-radius: 12px;">
       </button>
+
+      <!-- يمكنك إضافة أيقونة بوابة المدير هنا مستقبلاً بنسخ نفس كود الزر أعلاه وتغيير الرابط والصورة -->
+      
     </div>
 
     <script>
@@ -67,7 +70,7 @@
         prevScrollpos = currentScrollPos;
       }
 
-      // دوال التبديل
+      // دوال التبديل وفتح المنصات
       window.loadPlatform = function(url) {
         document.getElementById('root').style.display = 'none';
         let iframe = document.getElementById('platform-frame');
