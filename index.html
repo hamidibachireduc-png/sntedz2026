@@ -9,85 +9,97 @@
     <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       body { margin: 0; overflow-x: hidden; }
-      #platform-frame { display: none; width: 100%; height: calc(100vh - 100px); border: none; margin-top: 100px; background: #f4f7f6; }
-      #root { margin-top: 100px; }
       
-      /* تحويل الحاوية إلى زر خالي من التعارضات */
+      /* شريط التنقل الثابت في الأعلى */
+      #snte-navbar {
+        background: linear-gradient(to right, #006633, #004d26);
+        border-bottom: 3px solid #FFD700;
+        padding: 10px 20px;
+        display: flex; justify-content: center; gap: 25px;
+        position: fixed; top: 0; left: 0; right: 0;
+        z-index: 999999; direction: rtl; transition: top 0.4s ease-in-out;
+        align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;
+      }
+      
+      /* تنسيق الأزرار (وسوم a) */
       .btn-3d {
-        cursor: pointer;
-        padding: 0;
+        cursor: pointer; text-decoration: none; padding: 0;
         transition: transform 0.3s ease, filter 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-        position: relative;
-        z-index: 99999; /* تأكيد بقائه في الطبقة العليا */
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
       }
-      /* منع الصورة والنص من التدخل في النقرة */
-      .btn-3d img, .btn-3d span {
-        pointer-events: none;
+      .btn-3d:hover { transform: translateY(-5px) scale(1.08); filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.4)) brightness(1.1); }
+      .btn-3d:active { transform: translateY(2px) scale(0.98); filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2)); }
+      .btn-3d img { height: 55px; width: auto; border-radius: 12px; pointer-events: none; }
+      .btn-text { color: #ffffff; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.6); pointer-events: none; white-space: nowrap; }
+
+      /* الإطار العائم الذي سيغطي React عند فتحه */
+      #platform-frame {
+        display: none;
+        position: fixed; top: 100px; left: 0;
+        width: 100%; height: calc(100vh - 100px);
+        border: none; z-index: 999998; /* طبقة عالية جداً تحت الشريط مباشرة */
+        background: #f4f7f6;
       }
-      .btn-3d:hover {
-        transform: translateY(-5px) scale(1.08);
-        filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.4)) brightness(1.1);
-      }
-      .btn-3d:active {
-        transform: translateY(2px) scale(0.98);
-        filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
-      }
-      .btn-text {
-        color: #ffffff;
-        font-family: 'Cairo', sans-serif;
-        font-size: 13px;
-        font-weight: 700;
-        white-space: nowrap;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-      }
+      
+      #root { margin-top: 100px; }
     </style>
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b] antialiased selection:bg-[#006633] selection:text-white">
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- شريط التنقل الذكي الخاص بنقابة SNTE -->
-    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 25px; position: fixed; top: 0; left: 0; right: 0; z-index: 999999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;">
+    <div id="snte-navbar">
       
-      <!-- اسم البوابة -->
-      <div onclick="window.showMainPortal();" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-left: auto;">البوابة التفاعلية S.N.T.E</div>
+      <a href="javascript:void(0)" id="btn-home" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">البوابة التفاعلية S.N.T.E</a>
       
-      <!-- أيقونة بوابة الناظر (تم التغيير إلى div) -->
-      <div class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')" title="بوابة الناظر">
-        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="بوابة الناظر" style="height: 55px; width: auto; border-radius: 12px;">
+      <!-- زر الناظر -->
+      <a href="javascript:void(0)" id="btn-nather" class="btn-3d">
+        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="بوابة الناظر">
         <span class="btn-text">بوابة الناظر</span>
-      </div>
+      </a>
       
-      <!-- أيقونة بوابة الأستاذ (تم التغيير إلى div) -->
-      <div class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')" title="بوابة الأستاذ">
-        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="بوابة الأستاذ" style="height: 55px; width: auto; border-radius: 12px;">
+      <!-- زر الأستاذ -->
+      <a href="javascript:void(0)" id="btn-ostad" class="btn-3d">
+        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="بوابة الأستاذ">
         <span class="btn-text">بوابة الأستاذ</span>
-      </div>
+      </a>
       
     </div>
 
+    <!-- نافذة العرض وإطار التطبيق -->
+    <iframe id="platform-frame"></iframe>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- الأكواد البرمجية للتشغيل المضمون -->
     <script>
-      window.loadPlatform = function(url) {
-        document.getElementById('root').style.display = 'none';
-        let iframe = document.getElementById('platform-frame');
-        iframe.src = url;
-        iframe.style.display = 'block';
-        window.scrollTo(0, 0);
-      };
+      document.addEventListener("DOMContentLoaded", function() {
+        const frame = document.getElementById('platform-frame');
 
-      window.showMainPortal = function() {
-        document.getElementById('platform-frame').style.display = 'none';
-        document.getElementById('platform-frame').src = '';
-        document.getElementById('root').style.display = 'block';
-        window.scrollTo(0, 0);
-      };
+        // فتح منصة الناظر
+        document.getElementById('btn-nather').addEventListener('click', function() {
+          frame.src = 'https://hamidibachireduc-png.github.io/nathersnte2026/';
+          frame.style.display = 'block';
+        });
 
+        // فتح منصة الأستاذ
+        document.getElementById('btn-ostad').addEventListener('click', function() {
+          frame.src = 'https://hamidibachireduc-png.github.io/ostadsntedz2026/';
+          frame.style.display = 'block';
+        });
+
+        // العودة للبوابة الرئيسية (إغلاق المنصات)
+        document.getElementById('btn-home').addEventListener('click', function() {
+          frame.style.display = 'none';
+          frame.src = '';
+        });
+      });
+
+      // إخفاء الشريط عند التمرير لأسفل
       let prevScrollpos = window.pageYOffset;
       window.onscroll = function() {
         let currentScrollPos = window.pageYOffset;
@@ -99,9 +111,5 @@
         prevScrollpos = currentScrollPos;
       }
     </script>
-
-    <iframe id="platform-frame"></iframe>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
