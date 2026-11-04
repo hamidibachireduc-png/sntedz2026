@@ -341,24 +341,24 @@ export const PortalMessagesModal: React.FC<PortalMessagesModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="portal-messages-title"
-        className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-emerald-700 bg-[#062c14] text-white shadow-2xl"
+        className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-emerald-700 bg-[#062c14] text-white shadow-lg"
       >
-        <header className="flex items-center justify-between border-b border-emerald-800 px-4 py-3">
+        <header className="flex items-center justify-between border-b border-emerald-800 px-3 py-2.5">
           <div className="flex items-center gap-2">
-            <LockKeyhole className="h-5 w-5 text-amber-300" />
+            <LockKeyhole className="h-4 w-4 text-amber-300" />
             <div>
-              <h2 id="portal-messages-title" className="font-black text-amber-200">التراسل الداخلي للبوابة</h2>
-              <p className="text-xs text-emerald-200">مراسلات داخلية بين حسابات البوابة المفعّلة</p>
+              <h2 id="portal-messages-title" className="text-sm font-black text-amber-200">التراسل الداخلي</h2>
+              <p className="text-[10px] text-emerald-200">مراسلات داخلية بين الحسابات</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="إغلاق" className="rounded-lg p-2 text-gray-300 hover:bg-white/10">
-            <X className="h-5 w-5" />
+          <button type="button" onClick={onClose} aria-label="إغلاق" className="rounded-lg p-1.5 text-gray-300 hover:bg-white/10">
+            <X className="h-4 w-4" />
           </button>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
-          <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-100">
-            تُحفظ الرسائل في جدول البوابة، ولا تُعرض إلا لأطرافها. لا تُرسل معلومات شديدة الحساسية عبر التراسل.
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+          <p className="mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-100">
+            تُحفظ الرسائل في جدول البوابة، ولا تُعرض إلا لأطرافها.
           </p>
           {error && <p role="alert" className="mb-3 rounded-lg bg-red-900/60 p-2 text-sm text-red-100">{error}</p>}
           {notice && <p role="status" className="mb-3 rounded-lg bg-emerald-900/80 p-2 text-sm text-emerald-100">{notice}</p>}

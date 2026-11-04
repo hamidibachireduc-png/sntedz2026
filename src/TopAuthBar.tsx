@@ -527,11 +527,11 @@ export const TopAuthBar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsPortalMessagesOpen(true)}
-                  className="bg-indigo-700 hover:bg-indigo-600 text-white font-black text-xs sm:text-sm px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-400"
+                  className="bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm px-2.5 py-1.5 rounded-xl transition-all cursor-pointer border border-white/10 flex items-center gap-1.5"
                   title="مراسلات داخلية بين حسابات البوابة المفعّلة"
                 >
                   <span>✉️</span>
-                  <span>التراسل الداخلي</span>
+                  <span>التراسل</span>
                 </button>
                 <button
                   type="button"
