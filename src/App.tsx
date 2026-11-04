@@ -1,21 +1,20 @@
 import { useState } from 'react';
 
 export default function App() {
-  // حالة لتتبع المنصة المفتوحة حالياً داخل iframe
   const [activePlatform, setActivePlatform] = useState('');
 
   return (
     <div className="min-h-screen bg-[#052814]" dir="rtl">
       
-      {/* ================= شريط التنقل والتحكم الرئيسي (الهيدر) ================= */}
-      <header className="sticky top-0 z-[99999] w-full border-b-2 border-yellow-500 bg-[#052814] shadow-lg transition-transform duration-300">
+      {/* ================= شريط التنقل والتحكم الرئيسي ================= */}
+      <header className="sticky top-0 z-[99999] w-full border-b-2 border-yellow-500 bg-[#052814] shadow-lg">
         
-        {/* الصف الأول: الشريط العلوي */}
+        {/* الصف الأول: الشعار، الأيقونات ثلاثية الأبعاد، وأزرار التحكم */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-700 px-4 py-2">
-          {/* اليمين: الشعار واسم البوابة */}
+          
+          {/* اليمين: الشعار واسم البوابة (يعمل كزر للعودة للرئيسية) */}
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
-              {/* ضع مسار شعار النقابة هنا */}
               <img src="/logo.png" alt="الشعار" className="h-8" onError={(e) => e.currentTarget.style.display = 'none'} />
             </div>
             <h1 className="cursor-pointer font-['Cairo'] text-lg font-bold text-white hover:text-yellow-400" onClick={() => setActivePlatform('')}>
@@ -23,42 +22,49 @@ export default function App() {
             </h1>
           </div>
 
-          {/* الوسط: أزرار التحكم السريعة */}
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 rounded-full border border-green-600 bg-transparent px-4 py-1 font-['Cairo'] text-sm font-bold text-white hover:bg-green-800">
-              لوحة التحكم ()
-            </button>
-            <button className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-1 font-['Cairo'] text-sm font-bold text-white hover:bg-red-700">
-              تسجيل الخروج 🚪
-            </button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-700 text-yellow-500 hover:bg-gray-600">
-              🔔
-            </button>
-            <button className="flex items-center gap-2 rounded-full bg-teal-600 px-4 py-1 font-['Cairo'] text-sm font-bold text-white hover:bg-teal-700">
-              شيتات Google Drive 📊
-            </button>
+          {/* الوسط: أزرار العمليات (تسجيل الخروج، لوحة التحكم، إلخ) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="rounded-full border border-green-600 bg-transparent px-3 py-1 font-['Cairo'] text-xs font-bold text-white hover:bg-green-800">لوحة التحكم ()</button>
+            <button className="rounded-full bg-red-600 px-3 py-1 font-['Cairo'] text-xs font-bold text-white hover:bg-red-700">تسجيل الخروج 🚪</button>
+            <button className="rounded-full bg-teal-600 px-3 py-1 font-['Cairo'] text-xs font-bold text-white hover:bg-teal-700">شيتات Google Drive 📊</button>
+            <button className="rounded-full bg-yellow-500 px-3 py-1 font-['Cairo'] text-xs font-bold text-black hover:bg-yellow-400">طلبات الترخيص 📝</button>
+            <button className="rounded-full bg-green-600 px-3 py-1 font-['Cairo'] text-xs font-bold text-white hover:bg-green-500">طلبات الانخراط 📑</button>
           </div>
 
-          {/* اليسار: أزرار العمليات */}
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 rounded-full bg-yellow-500 px-4 py-1 font-['Cairo'] text-sm font-bold text-black hover:bg-yellow-400">
-              طلبات الترخيص 📝
+          {/* اليسار: الأيقونات ثلاثية الأبعاد (دائمة الظهور) */}
+          <div className="flex items-center gap-4">
+            {/* زر بوابة الناظر */}
+            <button
+              onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')}
+              className="group flex flex-col items-center gap-1 transition-transform hover:scale-105 active:scale-95"
+              title="بوابة الناظر"
+            >
+              <img
+                src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true"
+                alt="بوابة الناظر"
+                className="h-11 w-auto rounded-xl drop-shadow-md group-hover:drop-shadow-xl"
+              />
+              <span className="font-['Cairo'] text-[11px] font-bold text-white pointer-events-none">بوابة الناظر</span>
             </button>
-            <button className="flex items-center gap-2 rounded-full bg-green-600 px-4 py-1 font-['Cairo'] text-sm font-bold text-white hover:bg-green-500">
-              طلبات الانخراط 📑
-            </button>
-            <button className="flex items-center gap-2 rounded-full bg-teal-500 px-4 py-1 font-['Cairo'] text-sm font-bold text-white hover:bg-teal-400">
-              نشر مباشر ➕
-            </button>
-            <button className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-1 font-['Cairo'] text-sm font-bold text-white hover:bg-blue-500">
-              لوحة المظهر والصور 🎨
+
+            {/* زر بوابة الأستاذ */}
+            <button
+              onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')}
+              className="group flex flex-col items-center gap-1 transition-transform hover:scale-105 active:scale-95"
+              title="بوابة الأستاذ"
+            >
+              <img
+                src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true"
+                alt="بوابة الأستاذ"
+                className="h-11 w-auto rounded-xl drop-shadow-md group-hover:drop-shadow-xl"
+              />
+              <span className="font-['Cairo'] text-[11px] font-bold text-white pointer-events-none">بوابة الأستاذ</span>
             </button>
           </div>
         </div>
 
         {/* الصف الثاني: القوائم الرئيسية */}
         <div className="flex flex-wrap items-center justify-center gap-2 border-b border-gray-700 px-2 py-2">
-          {/* يمكنك استبدال الإيموجي بأيقوناتك الخاصة (SVG) */}
           <button className="rounded-full border border-green-600 px-3 py-1 font-['Cairo'] text-sm text-white hover:bg-green-800">التعريف بالنقابة 📖</button>
           <button className="rounded-full bg-red-600 px-3 py-1 font-['Cairo'] text-sm text-white hover:bg-red-700">منصة المحاضر والجمعيات العامة 📄</button>
           <button className="rounded-full border border-green-600 px-3 py-1 font-['Cairo'] text-sm text-white hover:bg-green-800">النشاطات النقابية 🏛</button>
@@ -81,47 +87,18 @@ export default function App() {
         </div>
       </header>
 
-      {/* ================= منطقة عرض المحتوى (المنصات الثلاثية الأبعاد أو الـ iframe) ================= */}
+      {/* ================= منطقة عرض المحتوى (المنصات) ================= */}
       <main className="w-full">
         {activePlatform ? (
-          /* عرض منصة الناظر أو الأستاذ عند النقر عليها */
           <iframe
             src={activePlatform}
-            className="h-[calc(100vh-140px)] w-full border-none bg-white"
+            className="h-[calc(100vh-160px)] w-full border-none bg-white"
             title="منصة SNTE"
           />
         ) : (
-          /* الشاشة الرئيسية: أزرار المنصات ثلاثية الأبعاد */
-          <div className="flex min-h-[calc(100vh-140px)] flex-col items-center justify-center gap-10 p-8">
-            <h2 className="font-['Cairo'] text-2xl font-bold text-yellow-500">المنصات الرقمية التفاعلية</h2>
-            
-            <div className="flex gap-10">
-              {/* زر منصة الناظر */}
-              <button
-                onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')}
-                className="group flex flex-col items-center gap-2 transition-transform hover:scale-105 active:scale-95"
-              >
-                <img
-                  src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true"
-                  alt="بوابة الناظر"
-                  className="h-24 w-auto rounded-xl drop-shadow-2xl group-hover:drop-shadow-[0_10px_20px_rgba(255,215,0,0.3)]"
-                />
-                <span className="font-['Cairo'] text-lg font-bold text-white">بوابة الناظر</span>
-              </button>
-
-              {/* زر منصة الأستاذ */}
-              <button
-                onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')}
-                className="group flex flex-col items-center gap-2 transition-transform hover:scale-105 active:scale-95"
-              >
-                <img
-                  src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true"
-                  alt="بوابة الأستاذ"
-                  className="h-24 w-auto rounded-xl drop-shadow-2xl group-hover:drop-shadow-[0_10px_20px_rgba(255,215,0,0.3)]"
-                />
-                <span className="font-['Cairo'] text-lg font-bold text-white">بوابة الأستاذ</span>
-              </button>
-            </div>
+          <div className="flex min-h-[calc(100vh-160px)] flex-col items-center justify-center p-8">
+            <h2 className="font-['Cairo'] text-3xl font-bold text-yellow-500 mb-4">البوابة المركزية التفاعلية</h2>
+            <p className="font-['Cairo'] text-lg text-white">قم باختيار إحدى المنصات من الشريط العلوي للبدء</p>
           </div>
         )}
       </main>
