@@ -13,24 +13,21 @@ export const Navbar: React.FC = () => {
   const [showBellDropdown, setShowBellDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
-  // الحالة التي ستتحكم بظهور المنصة ثلاثية الأبعاد فوق التطبيق
+  // حالة للتحكم في المنصات 3D المدمجة
   const [activePlatform, setActivePlatform] = useState('');
 
   const pendingRequests = publicationRequests.filter((r) => r.status === 'قيد الدراسة');
 
   return (
     <>
-      {/* ========================================================= */}
-      {/* الشريط العلوي الأصلي الخاص بك مع إضافة أيقونات 3D في المنتصف */}
-      {/* ========================================================= */}
+      {/* 1. الشريط العلوي الأصلي (لم يتم المساس بترتيب أزراره) */}
       <header className="w-full bg-[#03230f] border-b border-[#0f4d24] text-white px-3 py-2.5 shadow-md relative z-[99999]">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           
-          {/* --- يمين: الشعار واسم النقابة --- */}
+          {/* يمين: الشعار واسم النقابة */}
           <div className="flex items-center gap-3 order-1 w-full md:w-auto">
             <div className="relative group cursor-pointer" onClick={() => setActiveModal('about')}>
               <div className="w-11 h-11 rounded-full bg-white p-0.5 border-2 border-emerald-400 shadow-md flex items-center justify-center overflow-hidden hover:scale-105 transition-transform">
-                {/* SVG الشعار */}
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                   <circle cx="50" cy="50" r="48" fill="#ffffff" stroke="#007a3d" strokeWidth="3" />
                   <path d="M 50,5 A 45,45 0 0,1 50,95 A 45,45 0 0,1 50,5 Z" fill="#007a3d" opacity="0.15" />
@@ -45,7 +42,7 @@ export const Navbar: React.FC = () => {
 
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                {/* زر العودة للرئيسية: يقوم بتفريغ activePlatform لإخفاء الـ iframe */}
+                {/* النقر هنا يغلق المنصة ويعود للرئيسية */}
                 <h1 
                   className="text-sm sm:text-base md:text-lg font-black tracking-tight text-white hover:text-emerald-300 transition-colors cursor-pointer" 
                   onClick={() => { setActiveModal(null); setActivePlatform(''); }}
@@ -59,52 +56,32 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* --- وسط: أيقونات 3D + أزرار العمليات (كما في الصورة) --- */}
-          <div className="flex flex-wrap items-center justify-center gap-3 order-3 lg:order-2 w-full lg:w-auto">
+          {/* وسط: أزرار العمليات (طلبات الانخراط، الترخيص، قاعدة البيانات) */}
+          <div className="flex items-center flex-wrap gap-2 order-3 lg:order-2 w-full lg:w-auto justify-center">
             
-            {/* 1. الأيقونات ثلاثية الأبعاد (جديد) */}
-            <div className="flex items-center gap-3 border-l border-emerald-700/50 pl-3">
-              {/* زر الناظر */}
-              <button 
-                onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')} 
-                className="group flex flex-col items-center gap-0.5 transition-transform hover:scale-110 active:scale-95"
-                title="فتح منصة الناظر"
-              >
-                <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="الناظر" className="h-9 w-auto rounded-lg drop-shadow-md group-hover:drop-shadow-[0_4px_8px_rgba(255,215,0,0.4)]" />
-                <span className="font-['Cairo'] text-[10px] font-bold text-emerald-100">بوابة الناظر</span>
-              </button>
-              
-              {/* زر الأستاذ */}
-              <button 
-                onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')} 
-                className="group flex flex-col items-center gap-0.5 transition-transform hover:scale-110 active:scale-95"
-                title="فتح منصة الأستاذ"
-              >
-                <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="الأستاذ" className="h-9 w-auto rounded-lg drop-shadow-md group-hover:drop-shadow-[0_4px_8px_rgba(255,215,0,0.4)]" />
-                <span className="font-['Cairo'] text-[10px] font-bold text-emerald-100">بوابة الأستاذ</span>
-              </button>
-            </div>
+            <button onClick={() => setActiveModal('memberships')} className="flex items-center gap-1.5 bg-[#0e8a75] hover:bg-[#0c7563] text-white text-xs font-bold px-3 py-1.5 rounded-full border border-cyan-300/30 shadow-sm active:scale-95">
+              <CreditCard className="w-3.5 h-3.5 text-cyan-200" />
+              <span>انخراطات الولاية</span>
+            </button>
+            
+            <button onClick={() => setActiveModal('publishing')} className="flex items-center gap-1.5 bg-[#e5a00d] hover:bg-[#c88b0a] text-stone-900 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-200/50 shadow-sm active:scale-95">
+              <Send className="w-3.5 h-3.5 text-stone-900" />
+              <span className="hidden sm:inline">طلب ترخيص بالنشر</span>
+              {pendingRequests.length > 0 && (
+                <span className="bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black animate-pulse">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </button>
 
-            {/* 2. أزرار العمليات الأصلية */}
-            <div className="flex items-center flex-wrap gap-2">
-              <button onClick={() => setActiveModal('memberships')} className="flex items-center gap-1.5 bg-[#0e8a75] hover:bg-[#0c7563] text-white text-xs font-bold px-3 py-1.5 rounded-full border border-cyan-300/30 shadow-sm active:scale-95">
-                <CreditCard className="w-3.5 h-3.5 text-cyan-200" />
-                <span>انخراطات الولاية</span>
-              </button>
-              
-              <button onClick={() => setActiveModal('publishing')} className="flex items-center gap-1.5 bg-[#e5a00d] hover:bg-[#c88b0a] text-stone-900 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-200/50 shadow-sm active:scale-95">
-                <Send className="w-3.5 h-3.5 text-stone-900" />
-                <span>طلب ترخيص بالنشر</span>
-              </button>
-
-              <button onClick={() => setActiveModal('db-restore')} className="flex items-center gap-1.5 bg-[#1b4332] hover:bg-[#2d6a4f] text-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-500/50 shadow-sm">
-                <Database className="w-3.5 h-3.5 text-emerald-400" />
-                <span>قاعدة البيانات (مستعادة)</span>
-              </button>
-            </div>
+            <button onClick={() => setActiveModal('db-restore')} className="flex items-center gap-1.5 bg-[#1b4332] hover:bg-[#2d6a4f] text-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-500/50 shadow-sm">
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <span>قاعدة البيانات (مستعادة)</span>
+            </button>
+            
           </div>
 
-          {/* --- يسار: لوحة التحكم والإشعارات والخروج --- */}
+          {/* يسار: لوحة التحكم والتنبيهات */}
           <div className="flex items-center justify-end gap-2 order-2 lg:order-3 w-full md:w-auto">
             <button onClick={() => setActiveModal('profile')} className="flex items-center gap-2 bg-[#0d592c] hover:bg-[#116e37] text-white text-xs font-bold px-3.5 py-1.5 rounded-full border border-emerald-400/40">
               <span className="w-2 h-2 rounded-full bg-amber-400"></span>
@@ -113,25 +90,43 @@ export const Navbar: React.FC = () => {
             
             <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-1.5 bg-[#d9222a] hover:bg-[#b81820] text-white text-xs font-bold px-3.5 py-1.5 rounded-full border border-red-400/40">
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">تسجيل الخروج</span>
             </button>
             
             <div className="relative">
               <button onClick={() => setShowBellDropdown(!showBellDropdown)} className="p-1.5 rounded-full bg-[#0a3e1c] hover:bg-[#0e5226] text-amber-300 border border-emerald-600/50 relative">
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-amber-400 rounded-full"></span>
               </button>
             </div>
           </div>
-
         </div>
       </header>
 
-      {/* ========================================================= */}
-      {/* نافذة عرض المنصات: تظهر كطبقة علوية تغطي باقي التطبيق عند تفعيلها */}
-      {/* ========================================================= */}
+      {/* 2. شريط الأيقونات 3D المستقل (يظهر فقط في الشاشة الرئيسية) */}
+      {!activePlatform && (
+        <div className="w-full bg-[#052814] py-4 border-b border-yellow-600 flex justify-center gap-10 shadow-lg relative z-[99998]">
+          <button 
+            onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')} 
+            className="group flex flex-col items-center gap-2 transition-transform hover:scale-110 active:scale-95"
+            title="فتح منصة الناظر"
+          >
+            <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="الناظر" className="h-16 w-auto rounded-xl drop-shadow-xl group-hover:drop-shadow-[0_10px_15px_rgba(255,215,0,0.5)]" />
+            <span className="font-['Cairo'] text-sm font-bold text-emerald-100">بوابة الناظر</span>
+          </button>
+          
+          <button 
+            onClick={() => setActivePlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')} 
+            className="group flex flex-col items-center gap-2 transition-transform hover:scale-110 active:scale-95"
+            title="فتح منصة الأستاذ"
+          >
+            <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="الأستاذ" className="h-16 w-auto rounded-xl drop-shadow-xl group-hover:drop-shadow-[0_10px_15px_rgba(255,215,0,0.5)]" />
+            <span className="font-['Cairo'] text-sm font-bold text-emerald-100">بوابة الأستاذ</span>
+          </button>
+        </div>
+      )}
+
+      {/* 3. نافذة عرض المنصات (iframe) */}
       {activePlatform && (
-        <div className="fixed top-[75px] left-0 right-0 bottom-0 z-[99998] bg-[#f4f7f6]">
+        <div className="fixed top-[75px] left-0 right-0 bottom-0 z-[99997] bg-[#f4f7f6]">
           <iframe src={activePlatform} className="w-full h-full border-none" title="منصة SNTE" />
         </div>
       )}
