@@ -15,22 +15,19 @@
       #platform-frame { display: none; width: 100%; height: calc(100vh - 100px); border: none; margin-top: 100px; background: #f4f7f6; }
       #root { margin-top: 100px; }
       
-      /* تأثيرات وتنسيق الأزرار ثلاثية الأبعاد مع النص */
+      /* تحويل الحاوية إلى زر خالي من التعارضات */
       .btn-3d {
-        background: none;
-        border: none;
         cursor: pointer;
         padding: 0;
         transition: transform 0.3s ease, filter 0.3s ease;
-        outline: none;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 5px;
         position: relative;
-        z-index: 99999; /* رفع الزر فوق التطبيق */
+        z-index: 99999; /* تأكيد بقائه في الطبقة العليا */
       }
-      /* منع الصورة والنص من عرقلة الضغط على الزر */
+      /* منع الصورة والنص من التدخل في النقرة */
       .btn-3d img, .btn-3d span {
         pointer-events: none;
       }
@@ -59,24 +56,23 @@
     <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 25px; position: fixed; top: 0; left: 0; right: 0; z-index: 999999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); flex-wrap: wrap;">
       
       <!-- اسم البوابة -->
-      <a href="#" onclick="window.showMainPortal(); return false;" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 99999;">البوابة التفاعلية S.N.T.E</a>
+      <div onclick="window.showMainPortal();" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-left: auto;">البوابة التفاعلية S.N.T.E</div>
       
-      <!-- أيقونة بوابة الناظر مع النص -->
-      <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')" title="بوابة الناظر">
+      <!-- أيقونة بوابة الناظر (تم التغيير إلى div) -->
+      <div class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')" title="بوابة الناظر">
         <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="بوابة الناظر" style="height: 55px; width: auto; border-radius: 12px;">
         <span class="btn-text">بوابة الناظر</span>
-      </button>
+      </div>
       
-      <!-- أيقونة بوابة الأستاذ مع النص -->
-      <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')" title="بوابة الأستاذ">
+      <!-- أيقونة بوابة الأستاذ (تم التغيير إلى div) -->
+      <div class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')" title="بوابة الأستاذ">
         <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="بوابة الأستاذ" style="height: 55px; width: auto; border-radius: 12px;">
         <span class="btn-text">بوابة الأستاذ</span>
-      </button>
+      </div>
       
     </div>
 
     <script>
-      // إعداد دوال الفتح بشكل عام للنافذة
       window.loadPlatform = function(url) {
         document.getElementById('root').style.display = 'none';
         let iframe = document.getElementById('platform-frame');
