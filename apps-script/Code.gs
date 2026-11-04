@@ -24,10 +24,15 @@ function doGet(e) {
     return HtmlService.createHtmlOutput(accountSetupPage_());
   }
   if (p.action === 'getCard') {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'error',
-      message: 'يجب تسجيل الدخول من بوابة SNTE أولاً.'
-    })).setMimeType(ContentService.MimeType.JSON);
+    var result;
+    try {
+      result = p.sessionToken
+        ? getCardsForSession_({ sessionToken: p.sessionToken, ref: p.ref, wilaya: p.wilaya })
+        : getWilayaCard_(p.ref, p.wilaya, p.pin);
+    } catch (err) {
+      result = error_(err);
+    }
+    return legacyGetResponse_(result, p.callback);
   }
   return ContentService
     .createTextOutput(JSON.stringify({
@@ -36,6 +41,72 @@ function doGet(e) {
       actions: ['login', 'getCard', 'POST save']
     }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function legacyGetResponse_(result, callback) {
+  var json = JSON.stringify(result);
+  if (callback) {
+    var safeCallback = String(callback).replace(/[^\w$]/g, '');
+    if (!safeCallback) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'اسم دالة الاستدعاء غير صالح.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService
+      .createTextOutput(safeCallback + '(' + json + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getWilayaCard_(ref, wilaya, pin) {
+  checkPin_(pin);
+  ref = String(ref || '').trim();
+  wilaya = String(wilaya || '').trim();
+  if (!wilaya) return { status: 'error', message: 'يرجى إدخال اسم الولاية.' };
+
+  var rows = getSheet_().getDataRange().getValues();
+  if (!ref) {
+    var list = [];
+    for (var i = 1; i < rows.length && list.length < 200; i++) {
+      if (String(rows[i][2] || '').trim() !== wilaya) continue;
+      list.push({
+        ref: String(rows[i][0]),
+        date: formatDate_(rows[i][1]),
+        type: String(rows[i][4] || ''),
+        name: String(rows[i][5] || ''),
+        status: String(rows[i][9] || 'جديدة')
+      });
+    }
+    return { status: 'success', list: list, wilaya: wilaya };
+  }
+
+  for (var rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+    if (String(rows[rowIndex][0]).trim() !== ref) continue;
+    var cardWilaya = String(rows[rowIndex][2] || '').trim();
+    if (cardWilaya !== wilaya) {
+      return { status: 'error', message: 'هذه البطاقة غير تابعة للولاية المحددة.' };
+    }
+    var card;
+    try {
+      card = JSON.parse(rows[rowIndex][8]);
+    } catch (parseError) {
+      return { status: 'error', message: 'بيانات البطاقة غير صالحة.' };
+    }
+    card.refCode = String(rows[rowIndex][0]);
+    card.sentDate = formatDate_(rows[rowIndex][1]);
+    card.status = String(rows[rowIndex][9] || 'جديدة');
+    card.wilaya = cardWilaya;
+    return { status: 'success', data: card };
+  }
+  return { status: 'error', message: 'لم يتم العثور على بطاقة بهذا الرقم.' };
+}
+
+function checkPin_(pin) {
+  var configuredPin = PropertiesService.getScriptProperties().getProperty('ADMIN_PIN');
+  if (!configuredPin) throw new Error('إعداد رمز الدخول غير مكتمل. تواصل مع مسؤول الخدمة.');
+  if (String(pin || '') !== configuredPin) throw new Error('رمز الدخول غير صحيح.');
 }
 
 function doPost(e) {
@@ -609,6 +680,10 @@ function getCardsSheet_() {
   return sheet;
 }
 
+function getSheet_() {
+  return getCardsSheet_();
+}
+
 function getAccountsSheet_() {
   var spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   var sheet = spreadsheet.getSheetByName('حسابات الأمناء');
@@ -781,16 +856,24 @@ function processForm(payload) {
   try {
     lock.waitLock(20000);
     var sheet = getCardsSheet_();
-    var isGroup = payload.cardType === 'بطاقة اتصال جماعية';
+    var mode = payload.mode || payload.cardType || 'بطاقة اتصال فردية';
+    var isGroup = String(mode).indexOf('جماعية') !== -1;
+    var members = payload.groupMembers || payload.groupData || [];
     var prefix = isGroup ? 'SNTE-GRP-' : 'SNTE-IND-';
     var cardId = prefix + new Date().getFullYear() + '-' + ('0000' + sheet.getLastRow()).slice(-4);
     payload.cardId = cardId;
     payload.timestamp = new Date().toLocaleDateString('ar-DZ');
-    var mainName = isGroup ? 'قائمة جماعية (' + (payload.groupData ? payload.groupData.length : 0) + ' عمال)' : (payload.fullName || '-');
+    var mainName = isGroup
+      ? 'قائمة جماعية (' + members.length + ' عمال)'
+      : (payload.fullName || payload.empName || '-');
     sheet.appendRow([
       cardId, new Date(), payload.wilaya || '-', payload.baladiya || '-',
-      payload.cardType || '-', mainName, payload.institution || '-',
-      payload.situationDetails || '-', JSON.stringify(payload), 'جديدة'
+      mode, mainName, payload.institution || payload.school || '-',
+      payload.situationDetails || [payload.category, payload.target]
+        .map(function (value) { return String(value || '').trim(); })
+        .filter(Boolean)
+        .join(' ← ') || '-',
+      JSON.stringify(payload), 'جديدة'
     ]);
     return ok_(payload);
   } catch (err) {
@@ -800,25 +883,80 @@ function processForm(payload) {
   }
 }
 
-function searchCard(cardId, sessionToken) {
-  var result = getCardsForSession_({ sessionToken: sessionToken, ref: cardId });
-  return result.status === 'success' ? ok_(result.data) : err_(result.message);
+function searchCard(cardId, sessionTokenOrPin) {
+  var account = requireSession_(sessionTokenOrPin);
+  if (account) {
+    var sessionResult = getCardsForSession_({
+      sessionToken: sessionTokenOrPin,
+      ref: cardId,
+      wilaya: account.wilayaName
+    });
+    return sessionResult.status === 'success' ? ok_(sessionResult.data) : err_(sessionResult.message);
+  }
+  try {
+    checkPin_(sessionTokenOrPin);
+    var rows = getSheet_().getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() !== String(cardId || '').trim()) continue;
+      var card = JSON.parse(rows[i][8]);
+      card.status = String(rows[i][9] || 'جديدة');
+      return ok_(card);
+    }
+    return err_('لم يتم العثور على بطاقة بهذا الرقم المرجعي.');
+  } catch (err) {
+    return err_(err);
+  }
 }
 
-function listCards(sessionToken) {
-  var account = requireSession_(sessionToken);
-  if (!account) return err_('انتهت الجلسة. يرجى تسجيل الدخول مجدداً.');
-  var result = getCardsForSession_({ sessionToken: sessionToken, wilaya: account.wilayaName });
-  return result.status === 'success' ? ok_(result.list) : err_(result.message);
+function listCards(sessionTokenOrPin) {
+  var account = requireSession_(sessionTokenOrPin);
+  if (account) {
+    var sessionResult = getCardsForSession_({
+      sessionToken: sessionTokenOrPin,
+      wilaya: account.wilayaName
+    });
+    return sessionResult.status === 'success' ? ok_(sessionResult.list) : err_(sessionResult.message);
+  }
+  try {
+    checkPin_(sessionTokenOrPin);
+    var rows = getSheet_().getDataRange().getValues();
+    var list = [];
+    for (var i = rows.length - 1; i >= 1 && list.length < 200; i--) {
+      list.push({
+        id: rows[i][0],
+        date: formatDate_(rows[i][1]),
+        wilaya: rows[i][2],
+        baladiya: rows[i][3],
+        type: rows[i][4],
+        name: rows[i][5],
+        institution: rows[i][6],
+        status: String(rows[i][9] || 'جديدة')
+      });
+    }
+    return ok_(list);
+  } catch (err) {
+    return err_(err);
+  }
 }
 
-function setStatus(cardId, status, sessionToken) {
-  var account = requireSession_(sessionToken);
-  if (!account) return err_('انتهت الجلسة. يرجى تسجيل الدخول مجدداً.');
-  var result = getCardsForSession_({ sessionToken: sessionToken, ref: cardId, wilaya: account.wilayaName });
-  if (result.status !== 'success') return err_(result.message);
-  var sheet = getCardsSheet_();
+function setStatus(cardId, status, sessionTokenOrPin) {
+  var account = requireSession_(sessionTokenOrPin);
+  var sheet = getSheet_();
   var rows = sheet.getDataRange().getValues();
+  if (account) {
+    var result = getCardsForSession_({
+      sessionToken: sessionTokenOrPin,
+      ref: cardId,
+      wilaya: account.wilayaName
+    });
+    if (result.status !== 'success') return err_(result.message);
+  } else {
+    try {
+      checkPin_(sessionTokenOrPin);
+    } catch (err) {
+      return err_(err);
+    }
+  }
   for (var i = 1; i < rows.length; i++) {
     if (String(rows[i][0]).trim() === String(cardId).trim()) {
       sheet.getRange(i + 1, 10).setValue(String(status || 'جديدة'));
