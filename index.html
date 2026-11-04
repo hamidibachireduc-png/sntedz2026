@@ -8,12 +8,37 @@
     <style>
       body { margin: 0; overflow-x: hidden; }
       
-      /* 1. الشريط العائم الجديد في أسفل الشاشة (بعيداً عن أزرارك العلوية) */
-      #snte-bottom-dock {
+      /* حاوية الشريط العائم الأساسية */
+      #snte-dock-wrapper {
         position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
+        z-index: 999999; /* دائماً في الأعلى */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* زر التحكم (فتح/إغلاق الشريط) */
+      #toggle-dock-btn {
+        background: #FFD700;
+        color: #006633;
+        border: 2px solid #004d26;
+        border-radius: 20px;
+        padding: 5px 20px;
+        font-family: 'Cairo', sans-serif;
+        font-weight: 900;
+        font-size: 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+      }
+      #toggle-dock-btn:hover { background: #ffea00; transform: scale(1.05); }
+
+      /* الشريط الذي يحتوي الأيقونات */
+      #snte-bottom-dock {
         background: linear-gradient(to right, #006633, #004d26);
         border: 3px solid #FFD700;
         border-radius: 25px;
@@ -21,8 +46,18 @@
         display: flex;
         align-items: center;
         gap: 30px;
-        z-index: 999999; /* طبقة عليا */
         box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease;
+        /* الافتراضي: مفتوح */
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      
+      /* الكلاس الذي يُضاف عند الطي */
+      #snte-bottom-dock.hidden-dock {
+        transform: translateY(100px) scale(0.5); /* ينزل للأسفل ويصغر */
+        opacity: 0;
+        pointer-events: none; /* لمنع النقر وهو مخفي */
       }
 
       /* تنسيق الأيقونات ثلاثية الأبعاد */
@@ -38,56 +73,49 @@
 
       /* زر العودة للبوابة (يظهر فقط عند فتح منصة) */
       #close-platform-btn {
-        background: #d9222a;
-        color: white;
-        border: 2px solid white;
-        font-family: 'Cairo', sans-serif;
-        font-size: 14px;
-        font-weight: 900;
-        padding: 10px 20px;
-        border-radius: 15px;
-        cursor: pointer;
-        display: none; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        background: #d9222a; color: white; border: 2px solid white;
+        font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 900;
+        padding: 10px 20px; border-radius: 15px; cursor: pointer;
+        display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         transition: background 0.3s;
       }
       #close-platform-btn:hover { background: #b81820; }
 
-      /* 2. حاوية المنصات (iframe) */
+      /* حاوية المنصات (iframe) */
       #platform-container {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100vh;
-        z-index: 999998; /* تحت الشريط العائم مباشرة */
-        background: #f4f7f6;
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+        z-index: 999998; background: #f4f7f6;
       }
       #platform-frame { width: 100%; height: 100%; border: none; }
     </style>
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b]">
     
-    <!-- واجهة React الأصلية الخاصة بك المليئة بالأزرار (لن نلمسها وستظهر في الأعلى) -->
+    <!-- واجهة React الأصلية الخاصة بك المليئة بالأزرار -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- الشريط العائم في أسفل الشاشة -->
-    <div id="snte-bottom-dock">
+    <!-- الحاوية العائمة في أسفل الشاشة (قابلة للتحكم) -->
+    <div id="snte-dock-wrapper">
       
-      <!-- أيقونة بوابة الناظر -->
-      <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')">
-        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="الناظر">
-        <span class="btn-text">بوابة الناظر</span>
-      </a>
-      
-      <!-- أيقونة بوابة الأستاذ -->
-      <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')">
-        <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="الأستاذ">
-        <span class="btn-text">بوابة الأستاذ</span>
-      </a>
+      <!-- زر التحكم في الطي والإظهار -->
+      <button id="toggle-dock-btn" onclick="toggleDock()">إخفاء المنصات ▼</button>
 
-      <!-- زر العودة (مخفي افتراضياً) -->
-      <button id="close-platform-btn" onclick="closePlatform()">إغلاق والعودة للبوابة</button>
-      
+      <!-- الشريط الذي يحتوي الأيقونات -->
+      <div id="snte-bottom-dock">
+        <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')">
+          <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/nather-3d.png?raw=true" alt="الناظر">
+          <span class="btn-text">بوابة الناظر</span>
+        </a>
+        
+        <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')">
+          <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/ostad-3d.png?raw=true" alt="الأستاذ">
+          <span class="btn-text">بوابة الأستاذ</span>
+        </a>
+
+        <button id="close-platform-btn" onclick="closePlatform()">إغلاق والعودة</button>
+      </div>
+
     </div>
 
     <!-- نافذة عرض المنصات -->
@@ -95,12 +123,31 @@
       <iframe id="platform-frame"></iframe>
     </div>
 
+    <!-- الأوامر البرمجية للحركة -->
     <script>
+      let isDockVisible = true;
+
+      // دالة طي وإظهار الشريط
+      function toggleDock() {
+        const dock = document.getElementById('snte-bottom-dock');
+        const btn = document.getElementById('toggle-dock-btn');
+        
+        if (isDockVisible) {
+          dock.classList.add('hidden-dock');
+          btn.innerHTML = "إظهار المنصات ▲";
+        } else {
+          dock.classList.remove('hidden-dock');
+          btn.innerHTML = "إخفاء المنصات ▼";
+        }
+        isDockVisible = !isDockVisible;
+      }
+
       // دالة فتح المنصة
       function openPlatform(url) {
         document.getElementById('platform-frame').src = url;
         document.getElementById('platform-container').style.display = 'block';
         document.getElementById('close-platform-btn').style.display = 'block';
+        document.getElementById('toggle-dock-btn').style.display = 'none'; // إخفاء زر الطي أثناء فتح المنصة
       }
       
       // دالة إغلاق المنصة
@@ -108,6 +155,7 @@
         document.getElementById('platform-container').style.display = 'none';
         document.getElementById('platform-frame').src = '';
         document.getElementById('close-platform-btn').style.display = 'none';
+        document.getElementById('toggle-dock-btn').style.display = 'block'; // إرجاع زر الطي
       }
     </script>
   </body>
