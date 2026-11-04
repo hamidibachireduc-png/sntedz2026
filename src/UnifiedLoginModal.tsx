@@ -5,6 +5,7 @@ import {
   WILAYAS_LIST,
 } from './wilayasList';
 import { normalizeCardNumber } from './cardAllocation';
+import { callContactCardsApi } from './contactCardsApi';
 
 interface UnifiedLoginModalProps {
   isOpen: boolean;
@@ -44,7 +45,7 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -60,234 +61,104 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
       return;
     }
 
-    const cleanPhone = u.replace(/[\s\-\+\/]/g, '');
-
-    // -------------------------------------------------------------
-    // CATEGORY 1: الأمناء العامون (وطني، ولائي، بلدي، فرع نقابي)
-    // -------------------------------------------------------------
     if (mainCategory === 'sg') {
-      // 1.1 الأمين العام الوطني
-      const isNat =
-        u === 'kouideryahiaoui' ||
-        u === 'kouider' ||
-        u === 'yahiaoui' ||
-        u === 'sg.national@snte.dz' ||
-        (cleanPhone.length >= 8 && cleanPhone.includes('0557072815'));
-
-      if (isNat) {
-        if (p === 'kouider2026') {
-          const natUser = {
-            id: 'user-nat-01',
-            name: 'الأستاذ قويدر يحياوي',
-            title: 'الأمين العام الوطني للنقابة (تحكم وطني شامل)',
-            structureName: 'الأمانة العامة الوطنية',
-            role: 'NATIONAL_SG',
-            level: 'national',
-            username: 'kouideryahiaoui',
-            status: 'نشط',
-          };
-          localStorage.setItem('snte_user', JSON.stringify(natUser));
-          onLoginSuccess(natUser);
-          onClose();
-          return;
-        } else {
-          setErrorMsg('كلمة المرور غير صحيحة لحساب الأمين العام الوطني.');
-          return;
-        }
+      let accounts: any[] = [];
+      try {
+        const raw = localStorage.getItem('snte_accounts_v3');
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(parsed)) accounts = parsed;
+      } catch (error) {
+        console.error('Unable to read saved secretary accounts:', error);
+        setErrorMsg('تعذر قراءة سجل الحسابات المحفوظ على هذا الجهاز.');
+        return;
       }
 
-      // 1.1.2 المستشارون الوطنيون ولجنة الحكماء والهياكل الوطنية
-      const NATIONAL_STRUCTURES_ACCOUNTS = [
-        {
-          id: 'advisor-legal',
-          keywords: ['advisor-legal', 'legal', 'law', 'legal.advisor@snte.dz', 'مستشار الشؤون القانونية'],
-          name: 'الأستاذ مستشار الشؤون القانونية والمنازعات',
-          title: 'مستشار الشؤون القانونية والمنازعات (الأمانة الوطنية)',
-          structureName: 'الخلية الاستشارية العليا - الشؤون القانونية',
-          role: 'advisor-legal',
-          hierarchyRoleId: 'advisor-legal',
-          level: 'national',
-        },
-        {
-          id: 'advisor-pedagogy',
-          keywords: ['advisor-pedagogy', 'pedagogy', 'pedagogy.advisor@snte.dz', 'مستشار شؤون التربية والبيداغوجيا'],
-          name: 'الأستاذ مستشار شؤون التربية والبيداغوجيا',
-          title: 'مستشار شؤون التربية والبيداغوجيا (الأمانة الوطنية)',
-          structureName: 'الخلية الاستشارية العليا - التربية والبيداغوجيا',
-          role: 'advisor-pedagogy',
-          hierarchyRoleId: 'advisor-pedagogy',
-          level: 'national',
-        },
-        {
-          id: 'advisor-media',
-          keywords: ['advisor-media', 'media', 'media.advisor@snte.dz', 'مسؤولة عامة للخلية الوطنية للإعلام'],
-          name: 'الأستاذة المسؤولة العامة للخلية الوطنية للإعلام والتنظيم',
-          title: 'المسؤولة العامة للخلية الوطنية للإعلام والتنظيم',
-          structureName: 'الخلية الوطنية للإعلام والتنظيم',
-          role: 'advisor-media',
-          hierarchyRoleId: 'advisor-media',
-          level: 'national',
-        },
-        {
-          id: 'advisor-comm',
-          keywords: ['advisor-comm', 'comm', 'communication', 'comm.advisor@snte.dz', 'مستشار المكلف بتقنيات التواصل'],
-          name: 'الأستاذ مستشار المكلف بتقنيات التواصل والرقمنة',
-          title: 'مستشار المكلف بتقنيات التواصل والرقمنة',
-          structureName: 'خلية الرقمنة وتقنيات التواصل الوطنية',
-          role: 'advisor-comm',
-          hierarchyRoleId: 'advisor-comm',
-          level: 'national',
-        },
-        {
-          id: 'elders-council',
-          keywords: ['elders', 'elders-council', 'elders@snte.dz', 'لجنة الحكماء'],
-          name: 'عميد لجنة الحكماء (المتقاعدين)',
-          title: 'لجنة الحكماء وقدماء القياديين (المتقاعدين)',
-          structureName: 'لجنة الحكماء (المتقاعدين)',
-          role: 'elders-council',
-          hierarchyRoleId: 'elders-council',
-          level: 'national',
-        },
-        {
-          id: 'national-council',
-          keywords: ['national-council', 'council@snte.dz', 'عضو مجلس وطني'],
-          name: 'عضو المجلس الوطني القيادي',
-          title: 'عضو المجلس الوطني للنقابة',
-          structureName: 'المجلس الوطني القيادي',
-          role: 'national-council',
-          hierarchyRoleId: 'national-council',
-          level: 'national',
-        },
-        {
-          id: 'national-congress',
-          keywords: ['national-congress', 'congress@snte.dz', 'عضو مؤتمر وطني'],
-          name: 'مندوب المؤتمر الوطني السيد',
-          title: 'عضو المؤتمر الوطني السيد',
-          structureName: 'المؤتمر الوطني العام',
-          role: 'national-congress',
-          hierarchyRoleId: 'national-congress',
-          level: 'national',
-        },
-        {
-          id: 'national-secretariat',
-          keywords: ['national-secretariat', 'secretariat@snte.dz', 'الأمانة الوطنية'],
-          name: 'عضو الأمانة الوطنية التنفيذية',
-          title: 'الأمانة الوطنية التنفيذية',
-          structureName: 'المكتب التنفيذي للأمانة الوطنية',
-          role: 'national-secretariat',
-          hierarchyRoleId: 'national-secretariat',
-          level: 'national',
-        },
-      ];
-
-      const foundNatStructure = NATIONAL_STRUCTURES_ACCOUNTS.find((ns) =>
-        ns.keywords.some((kw) => kw.toLowerCase() === u || u.includes(kw.toLowerCase()))
-      );
-
-      if (foundNatStructure) {
-        if (p === 'snte2026' || p === 'kouider2026' || p.length >= 4) {
-          const natStructUser = {
-            id: foundNatStructure.id,
-            name: foundNatStructure.name,
-            title: foundNatStructure.title,
-            structureName: foundNatStructure.structureName,
-            role: foundNatStructure.role,
-            hierarchyRoleId: foundNatStructure.hierarchyRoleId,
-            level: 'national',
-            status: 'نشط',
-          };
-          localStorage.setItem('snte_user', JSON.stringify(natStructUser));
-          onLoginSuccess(natStructUser);
-          onClose();
-          return;
-        } else {
-          setErrorMsg(`كلمة المرور غير صحيحة لحساب ${foundNatStructure.title}.`);
-          return;
-        }
-      }
-
-      // 1.2 الأمناء العامون للولايات (72 ولاية) - مصادقة نظامية بدون أي دخول مباشر
-      const foundWilaya = WILAYAS_LIST.find(
-        (w) =>
-          w.code.toLowerCase() === u ||
-          `wilaya-${w.code}`.toLowerCase() === u ||
-          `wilaya${w.code}`.toLowerCase() === u ||
-          (w.username && w.username.toLowerCase() === u) ||
-          w.name.toLowerCase().includes(u) ||
-          (w.email && w.email.toLowerCase() === u)
-      );
-
-      if (foundWilaya) {
-        // Validated with flexible credentials or exact CSV credentials
-        const expectedWilayaPass = `snte2026@${foundWilaya.code}`;
-        const cleanP = p.toLowerCase();
-        const cleanPhone = (foundWilaya.phone || '').replace(/[\s\-\+\/]/g, '').toLowerCase();
-        const inputPhone = cleanP.replace(/[\s\-\+\/]/g, '').toLowerCase();
-
-        const isWilayaPassValid =
-          (foundWilaya.password && p === foundWilaya.password) ||
-          (foundWilaya.password && cleanP === foundWilaya.password.toLowerCase()) ||
-          cleanP === expectedWilayaPass.toLowerCase() ||
-          cleanP === 'snte2026' ||
-          cleanP === 'kouider2026' ||
-          cleanP === String(foundWilaya.code).toLowerCase() ||
-          (inputPhone && cleanPhone && inputPhone === cleanPhone) ||
-          cleanP === (foundWilaya.email || '').toLowerCase() ||
-          cleanP.length >= 3;
-
-        if (isWilayaPassValid) {
-          const wilayaUser = {
-            id: `wilaya-${foundWilaya.code}`,
-            name: `الأستاذ ${foundWilaya.sgName || 'الأمين العام الولائي'}`,
-            title: `الأمانة الولائية - ولاية ${foundWilaya.name} (${foundWilaya.code})`,
-            structureName: `الأمانة الولائية - ولاية ${foundWilaya.name} (${foundWilaya.code})`,
-            role: 'WILAYA_SG',
-            level: 'wilaya',
-            wilayaCode: foundWilaya.code,
-            wilayaName: foundWilaya.name,
-            email: foundWilaya.email,
-            phone: foundWilaya.phone,
-            status: 'نشط',
-          };
-          localStorage.setItem('snte_user', JSON.stringify(wilayaUser));
-          onLoginSuccess(wilayaUser);
-          onClose();
-          return;
-        } else {
-          setErrorMsg(`كلمة المرور غير صحيحة للأمانة الولائية لولاية ${foundWilaya.name}.`);
-          return;
-        }
-      }
-
-      // 1.3 الأمناء العامون للبلديات وفروع المؤسسات
-      const accountsRaw = localStorage.getItem('snte_accounts_v3');
-      const accounts: any[] = accountsRaw ? JSON.parse(accountsRaw) : [];
-      const foundSgAcc = accounts.find((acc) => {
-        const au = (acc.username || '').toLowerCase();
-        const ae = (acc.email || '').toLowerCase();
-        const ai = (acc.id || '').toLowerCase();
-        return (
-          (acc.role === 'MUNICIPAL_SG' || acc.role === 'SCHOOL_SG' || acc.role === 'WILAYA_SG') &&
-          (au === u || ae === u || ai === u)
-        );
+      const account = accounts.find((item) => {
+        const identifiers = [item.username, item.email, item.id]
+          .filter(Boolean)
+          .map((value: string) => value.trim().toLowerCase());
+        return identifiers.includes(u);
       });
 
-      if (foundSgAcc) {
-        if (foundSgAcc.password !== p && p !== 'snte2026' && p !== 'kouider2026') {
-          setErrorMsg('كلمة المرور غير صحيحة لحساب الهيكل النقابي.');
+      if (account) {
+        const roleText = `${account.role || ''} ${account.level || ''} ${account.title || ''} ${account.structureName || ''}`;
+        const role =
+          account.role ||
+          (roleText.includes('وطني') ? 'NATIONAL_SG' :
+            roleText.includes('ولائي') ? 'WILAYA_SG' :
+              roleText.includes('بلدي') ? 'MUNICIPAL_SG' :
+                roleText.includes('فرع') || roleText.includes('مؤسسة') ? 'SCHOOL_SG' : '');
+        const accountLevel =
+          role === 'NATIONAL_SG' ? 'national' :
+            role === 'WILAYA_SG' ? 'wilaya' :
+              role === 'MUNICIPAL_SG' ? 'municipal' :
+                role === 'SCHOOL_SG' || role === 'BRANCH_SG' ? 'school' : '';
+        const isCorrectLevel =
+          accountLevel === sgSubLevel ||
+          (sgSubLevel === 'school' && role === 'BRANCH_SG');
+
+        if (!isCorrectLevel) {
+          setErrorMsg('هذا الحساب لا يطابق مستوى الأمانة المحدد.');
           return;
         }
-        localStorage.setItem('snte_user', JSON.stringify(foundSgAcc));
-        onLoginSuccess(foundSgAcc);
+        if (!account.password || account.password !== p) {
+          setErrorMsg('كلمة المرور غير صحيحة لحساب الأمانة.');
+          return;
+        }
+
+        let contactCardSessionToken: string | undefined;
+        try {
+          const response = await callContactCardsApi({
+            action: 'login',
+            username: u,
+            password: p,
+            expectedLevel: sgSubLevel,
+          }, 4000);
+          if (response.status === 'success') {
+            contactCardSessionToken = response.sessionToken;
+          }
+        } catch {
+          // Portal sign-in remains available while the Apps Script deployment is being configured.
+        }
+
+        const secretaryUser = {
+          ...account,
+          role,
+          level: accountLevel,
+          username: account.username || u,
+          ...(contactCardSessionToken ? { contactCardSessionToken } : {}),
+        };
+        localStorage.setItem('snte_user', JSON.stringify(secretaryUser));
+        onLoginSuccess(secretaryUser);
         onClose();
         return;
       }
 
-      setErrorMsg('بيانات الدخول غير مسجلة ضمن سجلات الأمانة العامة. يرجى التأكد من اسم المستخدم وكلمة المرور.');
+      try {
+        const response = await callContactCardsApi({
+          action: 'login',
+          username: u,
+          password: p,
+          expectedLevel: sgSubLevel,
+        }, 4000);
+        if (response.status !== 'success' || !response.user || !response.sessionToken) {
+          setErrorMsg(response.message || 'الحساب غير موجود في سجل الدخول المحلي أو الخادم.');
+          return;
+        }
+        const secretaryUser = {
+          ...response.user,
+          contactCardSessionToken: response.sessionToken,
+        };
+        localStorage.setItem('snte_user', JSON.stringify(secretaryUser));
+        onLoginSuccess(secretaryUser);
+        onClose();
+      } catch (error) {
+        console.error('Secretary sign-in failed:', error);
+        setErrorMsg('لم يُعثر على الحساب محلياً وتعذر الاتصال بخادم الدخول. تحقق من نشره وإعداد الحساب.');
+      }
       return;
     }
 
-    // -------------------------------------------------------------
     // CATEGORY 2: المنسقون (رؤساء التنسيق الجهوي 07 + منسقو الرتب والأسلاك)
     // -------------------------------------------------------------
     if (mainCategory === 'coord') {
@@ -370,6 +241,7 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = ({
     // CATEGORY 3: المنخرطون (رقم البطاقة، NIN، الهاتف)
     // -------------------------------------------------------------
     if (mainCategory === 'member') {
+      const cleanPhone = u.replace(/[\s\-\+\/]/g, '');
       const membersRaw = localStorage.getItem('snte_members_v3');
       const members: any[] = membersRaw ? JSON.parse(membersRaw) : [];
       const normInput = normalizeCardNumber(u);

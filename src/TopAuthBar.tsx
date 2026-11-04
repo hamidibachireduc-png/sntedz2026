@@ -18,7 +18,8 @@ import { UnionStatutesModal } from './UnionStatutesModal';
 import { ContactSupportComponent } from './ContactSupportComponent';
 import { DigitalPlatformsModal } from './DigitalPlatformsModal';
 import { GitHubExportModal } from './GitHubExportModal';
-import { PrivateMessagesModal } from './PrivateMessagesModal';
+import { PortalMessagesModal } from './PortalMessagesModal';
+import { callContactCardsApi } from './contactCardsApi';
 import {
   SnteNotification,
   generateDynamicNotifications,
@@ -54,7 +55,7 @@ export const TopAuthBar: React.FC = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isPlatformsModalOpen, setIsPlatformsModalOpen] = useState(false);
   const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
-  const [isPrivateMessagesOpen, setIsPrivateMessagesOpen] = useState(false);
+  const [isPortalMessagesOpen, setIsPortalMessagesOpen] = useState(false);
   const [notifications, setNotifications] = useState<SnteNotification[]>([]);
   const [toastNotification, setToastNotification] = useState<SnteNotification | null>(null);
   const [activeCategoryForAdd, setActiveCategoryForAdd] = useState<TopicCategory>('union_bag');
@@ -295,7 +296,19 @@ export const TopAuthBar: React.FC = () => {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const currentUserRaw = localStorage.getItem('snte_user');
+      const user = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+      if (user?.contactCardSessionToken) {
+        await callContactCardsApi({
+          action: 'logout',
+          sessionToken: user.contactCardSessionToken,
+        }, 4000);
+      }
+    } catch (logoutError) {
+      console.error('Failed to revoke portal messaging session:', logoutError);
+    }
     localStorage.removeItem('snte_user');
     setCurrentUser(null);
     setActiveMemberData(null);
@@ -396,15 +409,6 @@ export const TopAuthBar: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => setIsPrivateMessagesOpen(true)}
-                  className="bg-indigo-700 hover:bg-indigo-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-400"
-                  title="إرسال واستقبال رسائل خاصة"
-                >
-                  <span>✉️</span>
-                  <span>الرسائل الخاصة</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setIsReviewModalOpen(true)}
                   className="bg-amber-500 hover:bg-amber-400 text-emerald-950 font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-amber-300"
                   title="مراجعة طلبات الترخيص والتفويض الواردة من الأمناء العامين والمنسقين"
@@ -453,17 +457,6 @@ export const TopAuthBar: React.FC = () => {
               </div>
             ) : isWilayaOrRegionalSG ? (
               <div className="flex items-center gap-1.5">
-                {currentUser?.role === 'WILAYA_SG' && (
-                  <button
-                    type="button"
-                    onClick={() => setIsPrivateMessagesOpen(true)}
-                    className="bg-indigo-700 hover:bg-indigo-600 text-white font-black text-xs px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-400"
-                    title="عرض الرسائل الخاصة الواردة من الأمانة الوطنية"
-                  >
-                    <span>✉️</span>
-                    <span>الرسائل الخاصة</span>
-                  </button>
-                )}
                 {(currentUser?.role === 'GENERAL_COORDINATOR' || currentUser?.level === 'coordinator') && (
                   <button
                     type="button"
@@ -531,6 +524,15 @@ export const TopAuthBar: React.FC = () => {
             {currentUser ? (
               <div className="flex items-center gap-2 flex-wrap">
                 
+                <button
+                  type="button"
+                  onClick={() => setIsPortalMessagesOpen(true)}
+                  className="bg-indigo-700 hover:bg-indigo-600 text-white font-black text-xs sm:text-sm px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-400"
+                  title="مراسلات داخلية بين حسابات البوابة المفعّلة"
+                >
+                  <span>✉️</span>
+                  <span>التراسل الداخلي</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -992,9 +994,11 @@ export const TopAuthBar: React.FC = () => {
 
       <ContactSupportComponent isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
-      <PrivateMessagesModal
-        isOpen={isPrivateMessagesOpen}
-        onClose={() => setIsPrivateMessagesOpen(false)}
+      <PortalMessagesModal
+        isOpen={isPortalMessagesOpen}
+        onClose={() => setIsPortalMessagesOpen(false)}
+        currentUser={currentUser}
+        onUserUpdated={setCurrentUser}
       />
 
       {toastNotification && (
