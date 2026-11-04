@@ -17,8 +17,32 @@
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b] antialiased selection:bg-[#006633] selection:text-white">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <div id="root"></div>
+    
+    <!-- شريط التنقل الذكي الخاص بنقابة SNTE -->
+    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 15px; display: flex; justify-content: center; gap: 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; flex-wrap: wrap;">
+      <a href="/" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 18px; text-decoration: none; margin-left: auto;">البوابة التفاعلية S.N.T.E</a>
+      <a href="/nathersnte2026/" style="background: #ffffff; color: #006633; padding: 8px 25px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; text-decoration: none; border: 2px solid #FFD700; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">بوابة الناظر</a>
+      <a href="/ostadsntedz2026/" style="background: #cc0000; color: #ffffff; padding: 8px 25px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; text-decoration: none; border: 2px solid #FFD700; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">بوابة الأستاذ</a>
+    </div>
+
+    <!-- سكربت إخفاء وإظهار الشريط عند التمرير -->
+    <script>
+      let prevScrollpos = window.pageYOffset;
+      window.onscroll = function() {
+        let currentScrollPos = window.pageYOffset;
+        if (prevScrollpos > currentScrollPos) {
+          // إظهار الشريط عند الصعود
+          document.getElementById("snte-navbar").style.top = "0";
+        } else {
+          // إخفاء الشريط عند النزول (السالب يرفعه خارج الشاشة)
+          document.getElementById("snte-navbar").style.top = "-120px";
+        }
+        prevScrollpos = currentScrollPos;
+      }
+    </script>
+
+    <!-- التطبيق الأساسي مع هامش علوي لحماية المحتوى من التغطية -->
+    <div id="root" style="margin-top: 90px;"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
