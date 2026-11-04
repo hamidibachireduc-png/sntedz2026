@@ -6,43 +6,89 @@
     <title>البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E</title>
     <meta name="description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية بنظام التدرج الهيكلي والصلاحيات (وطني، ولائي، بلدي، فرع مؤسسة) وإدارة الانخراطات والمحاضر والإحصائيات." />
     <meta property="og:title" content="البوابة الرقمية الرسمية - النقابة الوطنية لعمال التربية S.N.T.E" />
-    <meta property="og:description" content="البوابة الرقمية الرسمية للنقابة الوطنية لعمال التربية بنظام التدرج الهيكلي والصلاحيات (وطني، ولائي، بلدي، فرع مؤسسة) وإدارة الانخراطات والمحاضر والإحصائيات." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/assets/aistudio/Screenshot_2026-10-24-13-12-59-21_c0d35d5c8ea536686f7fb1c9f2f8f274_df626750.jpg" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/assets/aistudio/Screenshot_2026-10-24-13-12-59-21_c0d35d5c8ea536686f7fb1c9f2f8f274_df626750.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=Changa:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      body { margin: 0; overflow-x: hidden; }
+      #platform-frame { display: none; width: 100%; height: calc(100vh - 90px); border: none; margin-top: 90px; background: #f4f7f6; }
+      #root { margin-top: 100px; }
+      
+      /* تأثيرات الأزرار ثلاثية الأبعاد */
+      .btn-3d {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.3s ease, filter 0.3s ease;
+        outline: none;
+      }
+      .btn-3d:hover {
+        transform: translateY(-5px) scale(1.08); /* حركة صعود خفيفة وتكبير */
+        filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.4)) brightness(1.1);
+      }
+      .btn-3d:active {
+        transform: translateY(2px) scale(0.98); /* تأثير الضغط */
+        filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+      }
+    </style>
   </head>
   <body class="bg-[#f4f7f6] text-[#1e293b] antialiased selection:bg-[#006633] selection:text-white">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- شريط التنقل الذكي الخاص بنقابة SNTE -->
-    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 15px; display: flex; justify-content: center; gap: 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; flex-wrap: wrap;">
-      <a href="/" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 18px; text-decoration: none; margin-left: auto;">البوابة التفاعلية S.N.T.E</a>
-      <a href="/nathersnte2026/" style="background: #ffffff; color: #006633; padding: 8px 25px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; text-decoration: none; border: 2px solid #FFD700; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">بوابة الناظر</a>
-      <a href="/ostadsntedz2026/" style="background: #cc0000; color: #ffffff; padding: 8px 25px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; text-decoration: none; border: 2px solid #FFD700; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">بوابة الأستاذ</a>
+    <div id="snte-navbar" style="background: linear-gradient(to right, #006633, #004d26); border-bottom: 3px solid #FFD700; padding: 10px 20px; display: flex; justify-content: center; gap: 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; direction: rtl; transition: top 0.4s ease-in-out; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+      
+      <!-- اسم البوابة (للعودة للرئيسية) -->
+      <a href="#" onclick="showMainPortal(); return false;" style="color: #FFD700; font-family: 'Cairo', sans-serif; font-weight: 900; font-size: 20px; text-decoration: none; margin-left: auto; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">البوابة التفاعلية S.N.T.E</a>
+      
+      <!-- أيقونة بوابة الناظر (قم بتعديل اسم الصورة nather.png إذا لزم الأمر) -->
+      <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/nathersnte2026/')" title="بوابة الناظر">
+        <img src="./nather.png" alt="بوابة الناظر" style="height: 65px; width: auto; border-radius: 12px;">
+      </button>
+      
+      <!-- أيقونة بوابة الأستاذ (قم بتعديل اسم الصورة ostad.png إذا لزم الأمر) -->
+      <button class="btn-3d" onclick="window.loadPlatform('https://hamidibachireduc-png.github.io/ostadsntedz2026/')" title="بوابة الأستاذ">
+        <img src="./ostad.png" alt="بوابة الأستاذ" style="height: 65px; width: auto; border-radius: 12px;">
+      </button>
     </div>
 
-    <!-- سكربت إخفاء وإظهار الشريط عند التمرير -->
     <script>
+      // إخفاء وإظهار الشريط عند التمرير
       let prevScrollpos = window.pageYOffset;
       window.onscroll = function() {
         let currentScrollPos = window.pageYOffset;
         if (prevScrollpos > currentScrollPos) {
-          // إظهار الشريط عند الصعود
           document.getElementById("snte-navbar").style.top = "0";
         } else {
-          // إخفاء الشريط عند النزول (السالب يرفعه خارج الشاشة)
           document.getElementById("snte-navbar").style.top = "-120px";
         }
         prevScrollpos = currentScrollPos;
       }
+
+      // دوال التبديل
+      window.loadPlatform = function(url) {
+        document.getElementById('root').style.display = 'none';
+        let iframe = document.getElementById('platform-frame');
+        iframe.src = url;
+        iframe.style.display = 'block';
+        window.scrollTo(0, 0);
+      };
+
+      window.showMainPortal = function() {
+        document.getElementById('platform-frame').style.display = 'none';
+        document.getElementById('platform-frame').src = '';
+        document.getElementById('root').style.display = 'block';
+        window.scrollTo(0, 0);
+      };
     </script>
 
-    <!-- التطبيق الأساسي مع هامش علوي لحماية المحتوى من التغطية -->
-    <div id="root" style="margin-top: 90px;"></div>
+    <!-- نافذة عرض المنصات المدمجة -->
+    <iframe id="platform-frame"></iframe>
+
+    <!-- التطبيق الأساسي للبوابة التفاعلية -->
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
