@@ -165,24 +165,35 @@
         const frame = document.getElementById('platform-frame');
         const container = document.getElementById('platform-container');
         const closeBtn = document.getElementById('close-platform-btn');
-        const toggleBtn = document.getElementById('toggle-dock-btn');
+        
+        // التعديل هنا: تمت إزالة إخفاء الزر الأصفر
+        // const toggleBtn = document.getElementById('toggle-dock-btn');
 
         frame.src = url;
         container.style.display = 'block';
         closeBtn.style.display = 'block'; // إظهار الزر الأحمر المربع
-        toggleBtn.style.display = 'none'; 
+        
+        // toggleBtn.style.display = 'none'; // لم نعد نخفي الزر الأصفر
       }
 
       function closePlatform() {
         const frame = document.getElementById('platform-frame');
         const container = document.getElementById('platform-container');
         const closeBtn = document.getElementById('close-platform-btn');
-        const toggleBtn = document.getElementById('toggle-dock-btn');
+        
+        // التعديل هنا: تمت إزالة إظهار الزر الأصفر (لأنه لم يعد يُخفى أصلاً)
+        // const toggleBtn = document.getElementById('toggle-dock-btn');
 
         container.style.display = 'none';
         frame.src = 'about:blank'; // هذا السطر يمنع الانهيار
         closeBtn.style.display = 'none'; // إخفاء الزر بعد الإغلاق
-        toggleBtn.style.display = 'block'; 
+        
+        // toggleBtn.style.display = 'block'; // لم نعد نظهر الزر الأصفر
+        
+        // إذا قمت بإخفاء الشريط أثناء تصفح المنصة، يظهر تلقائياً عند الإغلاق
+        if (!isDockVisible) {
+            toggleDock();
+        }
       }
 
       // 2. نظام السحب والإفلات المتقدم (Mouse & Touch)
