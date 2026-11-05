@@ -1,299 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --green-snte: #117a37;
-  --green-dark: #094d22;
-  --green-light: #e8f5e9;
-  --red-snte: #d91424;
-  --red-dark: #9e0b17;
-  --red-light: #ffebee;
-  --gold-snte: #e6b85c;
-  --app-font: 'Cairo', 'Traditional Arabic', Tahoma, sans-serif;
-  --table-font-scale: 13px;
-}
-
-* {
-  box-sizing: border-box;
-  font-family: var(--app-font);
+  --primary-green: #006633;
+  --dark-green: #003d1e;
+  --light-green: #e8f5e9;
+  --accent-red: #d21034;
+  --gold: #d4af37;
+  --font-family: "Cairo", "Tajawal", "Almarai", sans-serif;
+  --base-font-size: 16px;
 }
 
 body {
-  background-color: #f1f5f9;
-  color: #111827;
-  margin: 0;
-  padding: 0;
+  font-family: var(--font-family);
+  font-size: var(--base-font-size);
+  -webkit-font-smoothing: antialiased;
 }
 
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
+body.dark-mode {
+  color: #f8fafc;
+  background-color: #0f172a;
 }
 
-/* Official A4 Landscape Sheet Styles */
-.a4-landscape-page {
-  background: white;
-  width: 297mm;
-  min-height: 202mm;
-  margin: 0 auto;
-  padding: 6mm 8mm;
-  border: 1px solid #94a3b8;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  position: relative;
-}
-
-@media screen and (max-width: 1400px) {
-  .sheet-scroll-container {
-    overflow-x: auto;
-    padding-bottom: 15px;
+@keyframes marqueeRtl {
+  0% {
+    transform: translate(-100%);
+  }
+  to {
+    transform: translate(100%);
   }
 }
 
-.sheet-header-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.35fr 1fr;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: var(--table-font-scale);
-  font-weight: 800;
-  line-height: 1.45;
+.animate-marquee {
+  animation: 32s linear infinite marqueeRtl;
+  display: inline-block;
 }
 
-.sheet-right-col {
-  text-align: start;
-}
-
-.sheet-left-col {
-  text-align: start;
-  padding-inline-start: 20px;
-}
-
-.sheet-center-col {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.rep-heading {
-  font-size: calc(var(--table-font-scale) + 2px);
-  font-weight: 900;
-  color: var(--green-dark);
-}
-
-.min-heading {
-  font-size: calc(var(--table-font-scale) + 1px);
-  font-weight: 800;
-  color: var(--red-snte);
-  margin-bottom: 4px;
-}
-
-.title-frame-with-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  border: 2px solid var(--green-snte);
-  background: linear-gradient(to left, var(--green-light), #ffffff, var(--red-light));
-  padding: 3px 18px;
-  border-radius: 8px;
-  box-shadow: 2px 2px 0px var(--red-snte);
-}
-
-.title-frame-with-logo img {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: contain;
-  background: #ffffff;
-  border: 1.5px solid var(--gold-snte);
-}
-
-.title-frame-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.main-doc-title {
-  font-size: calc(var(--table-font-scale) + 2px);
-  font-weight: 900;
-  color: #000;
-}
-
-table.summary-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 7px;
-  text-align: center;
-  font-size: calc(var(--table-font-scale) - 1px);
-  font-weight: 800;
-}
-
-table.summary-table th,
-table.summary-table td {
-  border: 1.5px solid #000;
-  padding: 3px 4px;
-}
-
-table.summary-table th {
-  background-color: var(--green-light);
-  color: var(--green-dark);
-}
-
-.highlight-col {
-  background-color: var(--red-light) !important;
-  color: var(--red-dark) !important;
-  font-weight: 900;
-}
-
-table.timetable-grid {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
-  border: 2px solid #000;
-  font-size: var(--table-font-scale);
-}
-
-table.timetable-grid th,
-table.timetable-grid td {
-  border: 1.5px solid #000;
-  padding: 2px 3px;
-  vertical-align: middle;
-}
-
-tr.hours-header th {
-  background: var(--green-snte);
-  color: white;
-  font-weight: 900;
-  padding: 5px 4px;
-  white-space: pre-line;
-}
-
-td.day-col-cell {
-  background: var(--red-light);
-  color: var(--red-dark);
-  font-weight: 900;
-  font-size: calc(var(--table-font-scale) + 1px);
-  width: 85px;
-}
-
-td.vertical-strip {
-  background: var(--green-light);
-  color: var(--green-dark);
-  font-weight: 900;
-  font-size: var(--table-font-scale);
-  width: 34px;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-}
-
-.activities-flex {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  min-height: 56px;
-  align-items: stretch;
-}
-
-.act-box {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 3px;
-  border-inline-end: 1px dashed #64748b;
-  cursor: grab;
-  transition: background-color 0.15s ease;
-}
-
-.act-box:last-child {
-  border-inline-end: none;
-}
-.act-box.w-60 {
-  flex: 2;
-}
-.act-box.w-45 {
-  flex: 1.5;
-}
-.act-box.w-30 {
-  flex: 1;
-}
-.act-box.w-90 {
-  flex: 3;
-}
-
-.act-name {
-  font-size: var(--table-font-scale);
-  font-weight: 800;
-  color: #000;
-  line-height: 1.25;
-}
-
-.act-time {
-  font-size: calc(var(--table-font-scale) - 1.5px);
-  font-weight: 800;
-  color: var(--red-snte);
-  margin-top: 2px;
-}
-
-.bg-arab {
-  background-color: #ffffff;
-}
-.bg-math {
-  background-color: #f0fdf4;
-}
-.bg-lang {
-  background-color: #fff1f2;
-}
-.bg-pe {
-  background-color: #ecfdf5;
-}
-.bg-off {
-  background-color: #f8fafc;
-  color: var(--green-dark);
-  font-weight: 900;
-}
-
-.footer-signatures {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  text-align: center;
-  margin-top: 8px;
-  font-size: calc(var(--table-font-scale) + 1px);
-  font-weight: 900;
-}
-
-@page {
-  size: A4 landscape;
-  margin: 4mm;
-}
-
-[contenteditable="true"]:hover {
-  background-color: rgba(17, 122, 55, 0.06);
-  outline: 1px dashed var(--green-snte);
-  cursor: text;
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
 
 @media print {
-  body {
-    background: white;
-  }
-  .no-print {
+  header,
+  footer,
+  nav,
+  button,
+  select,
+  input {
     display: none !important;
   }
-  .print-only-full {
+  #printableUnionCard,
+  #officialMinuteDocument,
+  #printableReceipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    border-width: 1px !important;
     display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
-  .a4-landscape-page {
-    width: 100%;
-    min-height: auto;
-    border: none;
-    box-shadow: none;
-    padding: 2mm;
-    margin: 0;
-  }
-  [contenteditable="true"] {
-    outline: none !important;
+  #printableUnionCard {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: #fff !important;
+    background: #004d26 !important;
   }
 }
