@@ -60,14 +60,28 @@
       .btn-3d img { height: 60px; width: auto; border-radius: 12px; pointer-events: none; }
       .btn-text { color: white; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: bold; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-      /* زر العودة للبوابة */
+      /* زر الإغلاق المربع الأحمر */
       #close-platform-btn {
-        background: #d9222a; color: white; border: 2px solid white;
-        font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 900;
-        padding: 10px 20px; border-radius: 15px; cursor: pointer;
-        display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: background 0.3s;
+        background: #e63946; /* لون أحمر */
+        color: white;
+        border: 2px solid white;
+        font-family: 'Cairo', sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        padding: 15px 15px; /* تعديل الأبعاد ليكون مربعاً تقريباً */
+        border-radius: 8px; /* حواف أقل استدارة */
+        cursor: pointer;
+        display: none; /* يبقى مخفياً في البداية */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: background 0.3s, transform 0.2s;
+        text-align: center;
+        line-height: 1.2;
       }
-      #close-platform-btn:hover { background: #b81820; }
+      
+      #close-platform-btn:hover { 
+        background: #d62828; 
+        transform: scale(1.05);
+      }
 
       /* حاوية المنصات */
       #platform-container {
@@ -92,6 +106,9 @@
         <!-- مؤشر بصري للسحب (نقاط أعلى الشريط) -->
         <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); color: rgba(255,215,0,0.6); font-size: 14px; pointer-events: none;">⠿</div>
 
+        <!-- زر العودة الأحمر المربع (تم نقله ليكون أول عنصر ليظهر في اليمين) -->
+        <button id="close-platform-btn" onclick="closePlatform()">إغلاق<br>والعودة</button>
+
         <!-- منصة المدير -->
         <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/modirsntedz2026/')">
           <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/modir-3d.png?raw=true" alt="المدير">
@@ -114,12 +131,10 @@
         </a>
 
         <a href="javascript:void(0)" class="btn-3d" onclick="openPlatform('https://hamidibachireduc-png.github.io/moucherifmourabi/')">
-          <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/moucherifmourabi.png?raw=true" alt="الأستاذ">
+          <img src="https://github.com/hamidibachireduc-png/sntedz2026/blob/main/public/moucherifmourabi.png?raw=true" alt="الاشراف">
           <span class="btn-text">بوابة الاشراف</span>
         </a>
-        
-        <!-- ملاحظة: إذا أردت حذف الزر السفلي لاحقاً لتفادي التكرار، احذف السطر التالي فقط -->
-        <button id="close-platform-btn" onclick="closePlatform()">إغلاق والعودة</button>
+
       </div>
 
     </div>
@@ -147,25 +162,27 @@
       }
 
       function openPlatform(url) {
-        document.getElementById('platform-frame').src = url;
-        document.getElementById('platform-container').style.display = 'block';
-        
-        // إذا قمت بحذف الزر السفلي، احذف السطر التالي أيضاً
-        document.getElementById('close-platform-btn').style.display = 'block';
-        
-        document.getElementById('toggle-dock-btn').style.display = 'none'; 
+        const frame = document.getElementById('platform-frame');
+        const container = document.getElementById('platform-container');
+        const closeBtn = document.getElementById('close-platform-btn');
+        const toggleBtn = document.getElementById('toggle-dock-btn');
+
+        frame.src = url;
+        container.style.display = 'block';
+        closeBtn.style.display = 'block'; // إظهار الزر الأحمر المربع
+        toggleBtn.style.display = 'none'; 
       }
 
       function closePlatform() {
-        document.getElementById('platform-container').style.display = 'none';
-        
-        // التعديل الرئيسي لمنع خروج الصفحة: تم تغيير '' إلى 'about:blank'
-        document.getElementById('platform-frame').src = 'about:blank';
-        
-        // إذا قمت بحذف الزر السفلي، احذف السطر التالي أيضاً
-        document.getElementById('close-platform-btn').style.display = 'none';
-        
-        document.getElementById('toggle-dock-btn').style.display = 'block'; 
+        const frame = document.getElementById('platform-frame');
+        const container = document.getElementById('platform-container');
+        const closeBtn = document.getElementById('close-platform-btn');
+        const toggleBtn = document.getElementById('toggle-dock-btn');
+
+        container.style.display = 'none';
+        frame.src = 'about:blank'; // هذا السطر يمنع الانهيار
+        closeBtn.style.display = 'none'; // إخفاء الزر بعد الإغلاق
+        toggleBtn.style.display = 'block'; 
       }
 
       // 2. نظام السحب والإفلات المتقدم (Mouse & Touch)
