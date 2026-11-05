@@ -21,6 +21,7 @@
         gap: 10px;
         cursor: grab; /* مؤشر اليد للسحب */
       }
+      #snte-dock-wrapper[hidden] { display: none; }
       #snte-dock-wrapper:active { cursor: grabbing; } /* شكل اليد عند الإمساك */
 
       /* زر التحكم (فتح/إغلاق) */
@@ -83,7 +84,7 @@
     <script type="module" src="/src/main.tsx"></script>
 
     <!-- الحاوية العائمة (قابلة للسحب والتحكم) -->
-    <div id="snte-dock-wrapper">
+    <div id="snte-dock-wrapper" hidden>
       
       <button id="toggle-dock-btn" onclick="toggleDock()">إخفاء المنصات ▼</button>
 
@@ -208,6 +209,32 @@
         document.removeEventListener('touchend', closeDragElementTouch);
         document.removeEventListener('touchmove', elementDragTouch);
       }
+
+      function syncDockVisibility() {
+        const dockWrapper = document.getElementById('snte-dock-wrapper');
+        let isSignedIn = false;
+
+        try {
+          const user = JSON.parse(localStorage.getItem('snte_user') || 'null');
+          isSignedIn = Boolean(
+            user &&
+            typeof user === 'object' &&
+            (user.id || user.username) &&
+            (user.role || user.level)
+          );
+        } catch (error) {
+          console.error('تعذر التحقق من حالة تسجيل الدخول لإظهار المنصات.', error);
+        }
+
+        dockWrapper.hidden = !isSignedIn;
+        if (!isSignedIn) closePlatform();
+      }
+
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'snte_user' || event.key === null) syncDockVisibility();
+      });
+      window.setInterval(syncDockVisibility, 1000);
+      syncDockVisibility();
     </script>
   </body>
 </html>
