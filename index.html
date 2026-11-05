@@ -108,6 +108,7 @@
           <span class="btn-text">بوابة الأستاذ</span>
         </a>
 
+        <!-- ملاحظة: إذا أردت حذف الزر السفلي لاحقاً لتفادي التكرار، احذف السطر التالي فقط -->
         <button id="close-platform-btn" onclick="closePlatform()">إغلاق والعودة</button>
       </div>
 
@@ -138,13 +139,22 @@
       function openPlatform(url) {
         document.getElementById('platform-frame').src = url;
         document.getElementById('platform-container').style.display = 'block';
+        
+        // إذا قمت بحذف الزر السفلي، احذف السطر التالي أيضاً
         document.getElementById('close-platform-btn').style.display = 'block';
+        
         document.getElementById('toggle-dock-btn').style.display = 'none'; 
       }
+
       function closePlatform() {
         document.getElementById('platform-container').style.display = 'none';
-        document.getElementById('platform-frame').src = '';
+        
+        // التعديل الرئيسي لمنع خروج الصفحة: تم تغيير '' إلى 'about:blank'
+        document.getElementById('platform-frame').src = 'about:blank';
+        
+        // إذا قمت بحذف الزر السفلي، احذف السطر التالي أيضاً
         document.getElementById('close-platform-btn').style.display = 'none';
+        
         document.getElementById('toggle-dock-btn').style.display = 'block'; 
       }
 
@@ -156,12 +166,10 @@
       dockWrapper.onmousedown = dragMouseDown;
 
       function dragMouseDown(e) {
-        // نمنع السحب إذا ضغط المستخدم على زر أو رابط لتجنب التعارض
         if (e.target.closest('a') || e.target.closest('button')) return;
         e.preventDefault();
         pos3 = e.clientX; pos4 = e.clientY;
         
-        // تحويل الموقع ليكون حر الإحداثيات (Absolute) بدلاً من متمركز (Centered)
         const rect = dockWrapper.getBoundingClientRect();
         dockWrapper.style.left = rect.left + "px";
         dockWrapper.style.top = rect.top + "px";
@@ -203,7 +211,7 @@
 
       function elementDragTouch(e) {
         if (e.target.closest('a') || e.target.closest('button')) return;
-        e.preventDefault(); // يمنع الشاشة من النزول عند السحب
+        e.preventDefault();
         let touch = e.touches[0];
         pos1 = pos3 - touch.clientX; pos2 = pos4 - touch.clientY;
         pos3 = touch.clientX; pos4 = touch.clientY;
